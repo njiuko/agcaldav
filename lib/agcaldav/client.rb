@@ -84,7 +84,7 @@ module AgCalDAV
 
       __create_http.start do |http|
         req = Net::HTTP::Report.new(@url, initheader = {'Content-Type'=>'application/xml'} )
-
+        req["depth"] = 1
         add_auth("REPORT", req)
 
         if data[:start].is_a? Integer
