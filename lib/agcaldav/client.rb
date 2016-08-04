@@ -27,21 +27,22 @@ module AgCalDAV
       @ssl      = uri.scheme == 'https'
 
       unless data[:authtype].nil?
-      	@authtype = data[:authtype]
-      	if @authtype == 'digest'
+        @authtype = data[:authtype]
 
-      		@digest_auth = Net::HTTP::DigestAuth.new
-      		@duri = URI.parse data[:uri]
-      		@duri.user = @user
-      		@duri.password = @password
+        if @authtype == 'digest'
 
-      	elsif @authtype == 'basic'
-	    	#Don't Raise or do anything else
-	    else
-	    	raise "Authentication Type Specified Is Not Valid. Please use basic or digest"
-	    end
+          @digest_auth = Net::HTTP::DigestAuth.new
+          @duri = URI.parse data[:uri]
+          @duri.user = @user
+          @duri.password = @password
+
+        elsif @authtype == 'basic'
+          #Don't Raise or do anything else
+        else
+          raise "Authentication Type Specified Is Not Valid. Please use basic or digest"
+        end
       else
-      	@authtype = 'basic'
+        @authtype = 'basic'
       end
     end
 
@@ -192,98 +193,23 @@ module AgCalDAV
       end
     end
 
-    def add_alarm tevent, altCal="Calendar"
-
-    end
-
-    def find_todo uuid
-      res = nil
-      __create_http.start {|http|
-        req = Net::HTTP::Get.new("#{@url}/#{uuid}.ics")
-        if not @authtype == 'digest'
-        	req.basic_auth @user, @password
-        else
-        	req.add_field 'Authorization', digestauth('GET')
-        end
-        res = http.request( req )
-      }
-      errorhandling res
-      r = Icalendar::Calendar.parse(res.body)
-      r.first.todos.first
-    end
-
-    def create_todo todo
-      c = Calendar.new
-      uuid = UUID.new.generate
-      raise DuplicateError if entry_with_uuid_exists?(uuid)
-      c.todo do
-        uid           uuid
-        start         DateTime.parse(todo[:start])
-        duration      todo[:duration]
-        summary       todo[:title]
-        description   todo[:description]
-        klass         todo[:accessibility] #PUBLIC, PRIVATE, CONFIDENTIAL
-        location      todo[:location]
-        percent       todo[:percent]
-        priority      todo[:priority]
-        url           todo[:url]
-        geo           todo[:geo_location]
-        status        todo[:status]
-      end
-      c.todo.uid = uuid
-      cstring = c.to_ical
-      res = nil
-      http = Net::HTTP.new(@host, @port)
-      __create_http.start { |http|
-        req = Net::HTTP::Put.new("#{@url}/#{uuid}.ics")
-        req['Content-Type'] = 'text/calendar'
-        if not @authtype == 'digest'
-        	req.basic_auth @user, @password
-        else
-        	req.add_field 'Authorization', digestauth('PUT')
-        end
-        req.body = cstring
-        res = http.request( req )
-      }
-      errorhandling res
-      find_todo uuid
-    end
-
-    def create_todo
-      res = nil
-      raise DuplicateError if entry_with_uuid_exists?(uuid)
-
-      __create_http.start {|http|
-        req = Net::HTTP::Report.new(@url, initheader = {'Content-Type'=>'application/xml'} )
-        if not @authtype == 'digest'
-        	req.basic_auth @user, @password
-        else
-        	req.add_field 'Authorization', digestauth('REPORT')
-        end
-        req.body = AgCalDAV::Request::ReportVTODO.new.to_xml
-        res = http.request( req )
-      }
-      errorhandling res
-      format.parse_todo( res.body )
-    end
-
     private
 
     def digestauth method
+      h = Net::HTTP.new @duri.host, @duri.port
 
-	    h = Net::HTTP.new @duri.host, @duri.port
-	    if @ssl
-	    	h.use_ssl = @ssl
-	    	h.verify_mode = OpenSSL::SSL::VERIFY_NONE
-	    end
-	    req = Net::HTTP::Get.new @duri.request_uri
+      if @ssl
+        h.use_ssl = @ssl
+        h.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
 
-	    res = h.request req
-	    # res is a 401 response with a WWW-Authenticate header
+      req = Net::HTTP::Get.new @duri.request_uri
+      res = h.request req
+      # res is a 401 response with a WWW-Authenticate header
 
-	    auth = @digest_auth.auth_header @duri, res['www-authenticate'], method
+      auth = @digest_auth.auth_header @duri, res['www-authenticate'], method
 
-    	return auth
+      return auth
     end
 
     def entry_with_uuid_exists? uuid
