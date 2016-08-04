@@ -61,41 +61,40 @@ module AgCalDAV
     def find_events data
       result = ""
       events = []
-      res = nil
-      __create_http.start {|http|
+      res    = nil
+
+      __create_http.start do |http|
 
         req = Net::HTTP::Report.new(@url, initheader = {'Content-Type'=>'application/xml'} )
 
-		if not @authtype == 'digest'
-			req.basic_auth @user, @password
-		else
-			req.add_field 'Authorization', digestauth('REPORT')
-		end
-		    if data[:start].is_a? Integer
+        if not @authtype == 'digest'
+          req.basic_auth @user, @password
+        else
+          req.add_field 'Authorization', digestauth('REPORT')
+        end
+
+        if data[:start].is_a? Integer
           req.body = AgCalDAV::Request::ReportVEVENT.new(Time.at(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
                                                         Time.at(data[:end]).utc.strftime("%Y%m%dT%H%M%S") ).to_xml
         else
-          req.body = AgCalDAV::Request::ReportVEVENT.new(DateTime.parse(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
-                                                        DateTime.parse(data[:end]).utc.strftime("%Y%m%dT%H%M%S") ).to_xml
+          req.body = AgCalDAV::Request::ReportVEVENT.new(Time.parse(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
+                                                        Time.parse(data[:end]).utc.strftime("%Y%m%dT%H%M%S") ).to_xml
         end
         res = http.request(req)
-      }
-        errorhandling res
-        result = ""
+      end
 
-        xml = REXML::Document.new(res.body)
-        REXML::XPath.each( xml, '//c:calendar-data/', {"c"=>"urn:ietf:params:xml:ns:caldav"} ){|c| result << c.text}
-        r = Icalendar.parse(result)
-        unless r.empty?
-          r.each do |calendar|
-            calendar.events.each do |event|
-              events << event
-            end
-          end
-          events
-        else
-          return false
-        end
+      errorhandling res
+      result = ""
+
+      xml = REXML::Document.new(res.body)
+      REXML::XPath.each( xml, '//c:calendar-data/', {"c"=>"urn:ietf:params:xml:ns:caldav"} ){|c| result << c.text}
+
+      calendar = Icalendar::Calendar.parse(result).first
+      if calendar
+        calendar.events
+      else
+        false
+      end
     end
 
     def find_event uuid
@@ -103,35 +102,35 @@ module AgCalDAV
       __create_http.start {|http|
         req = Net::HTTP::Get.new("#{@url}/#{uuid}.ics")
         if not @authtype == 'digest'
-        	req.basic_auth @user, @password
+          req.basic_auth @user, @password
         else
-        	req.add_field 'Authorization', digestauth('GET')
+          req.add_field 'Authorization', digestauth('GET')
         end
         res = http.request( req )
       }
       errorhandling res
       begin
-      	r = Icalendar.parse(res.body)
+        r = Icalendar::Calendar.parse(res.body)
       rescue
-      	return false
+        return false
       else
-      	r.first.events.first
+        r.first.events.first
       end
-
-
     end
 
     def delete_event uuid
       res = nil
-      __create_http.start {|http|
+
+      __create_http.start do |http|
         req = Net::HTTP::Delete.new("#{@url}/#{uuid}.ics")
         if not @authtype == 'digest'
-        	req.basic_auth @user, @password
+         req.basic_auth @user, @password
         else
-        	req.add_field 'Authorization', digestauth('DELETE')
+         req.add_field 'Authorization', digestauth('DELETE')
         end
         res = http.request( req )
-      }
+      end
+
       errorhandling res
       # accept any success code
       if res.code.to_i.between?(200,299)
@@ -142,9 +141,9 @@ module AgCalDAV
     end
 
     def create_event event
-      c = Icalendar::Calendar.new
+      calendar = Icalendar::Calendar.new
 
-      event = c.event do |e|
+      event = calendar.event do |e|
         e.dtstart      = DateTime.parse(event[:start])
         e.dtend        = DateTime.parse(event[:end])
         e.categories   = event[:categories]
@@ -160,9 +159,11 @@ module AgCalDAV
         e.url          = event[:url]
       end
 
-      cstring = c.to_ical
-      res     = nil
-      http    = Net::HTTP.new(@host, @port)
+      raise DuplicateError if entry_with_uuid_exists?(event.uid)
+
+      calendar_ical = calendar.to_ical
+      res           = nil
+      http          = Net::HTTP.new(@host, @port)
 
       __create_http.start do |http|
         req                  = Net::HTTP::Put.new("#{@url}/#{event.uid}.ics")
@@ -174,8 +175,8 @@ module AgCalDAV
           req.add_field 'Authorization', digestauth('PUT')
         end
 
-        req.body = cstring
-        res      = http.request( req )
+        req.body = calendar_ical
+        res      = http.request(req)
       end
 
       errorhandling(res)
@@ -207,13 +208,9 @@ module AgCalDAV
         res = http.request( req )
       }
       errorhandling res
-      r = Icalendar.parse(res.body)
+      r = Icalendar::Calendar.parse(res.body)
       r.first.todos.first
     end
-
-
-
-
 
     def create_todo todo
       c = Calendar.new
@@ -292,36 +289,45 @@ module AgCalDAV
     def entry_with_uuid_exists? uuid
       res = nil
 
-      __create_http.start {|http|
+      __create_http.start do |http|
         req = Net::HTTP::Get.new("#{@url}/#{uuid}.ics")
         if not @authtype == 'digest'
-        	req.basic_auth @user, @password
+          req.basic_auth @user, @password
         else
-        	req.add_field 'Authorization', digestauth('GET')
+          req.add_field 'Authorization', digestauth('GET')
         end
 
         res = http.request( req )
+      end
 
-      }
       begin
         errorhandling res
-      	Icalendar.parse(res.body)
+        Icalendar::Calendar.parse(res.body)
       rescue
-      	return false
-      else
-      	return true
+        return false
+      end
+
+      if res.code.to_i == 404
+        false
+      elsif res.code.to_i.between?(200,299)
+        true
       end
     end
+
     def  errorhandling response
-      raise AuthenticationError if response.code.to_i == 401
-      raise NotExistError if response.code.to_i == 410
-      raise APIError if response.code.to_i >= 500
+      case response.code.to_i
+      when 401
+        raise AuthenticationError
+      when 410
+        raise NotExistError
+      when 500
+        raise APIError
+      end
     end
   end
 
+  class AgCalDAVError < StandardError; end
 
-  class AgCalDAVError < StandardError
-  end
   class AuthenticationError < AgCalDAVError; end
   class DuplicateError      < AgCalDAVError; end
   class APIError            < AgCalDAVError; end

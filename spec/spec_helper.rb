@@ -1,7 +1,8 @@
 require 'rspec'
 require 'rubygems'
 require 'agcaldav'
+require 'fakeweb'
 
 RSpec.configure do |config|
-  # some (optional) config here
+  FakeWeb.allow_net_connect = false
 end
