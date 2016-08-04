@@ -1,6 +1,5 @@
 module AgCalDAV
   class Client
-    include Icalendar
     attr_accessor :host, :port, :url, :user, :password, :ssl
 
     def format=( fmt )
@@ -57,6 +56,10 @@ module AgCalDAV
         http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
       http
+    end
+
+    def info(data)
+
     end
 
     def find_events data
