@@ -1,7 +1,7 @@
 module AgCalDAV
   class Query
     attr_accessor :child
-    
+
     #TODO: raise error if to_xml is called before child is assigned
     def to_xml(xml = Builder::XmlMarkup.new(:indent => 2))
       xml.instruct!
@@ -17,11 +17,11 @@ module AgCalDAV
         end
       end
     end
-    
+
     def event(param = nil)
       self.child = Filter::Component.new("VEVENT")
       if param.is_a? Range
-        self.child.time_range(param) 
+        self.child.time_range(param)
       elsif param.is_a? String
         self.child.uid(param)
       else
@@ -33,7 +33,7 @@ module AgCalDAV
       self.child = Filter::Component.new("VTODO")
       self.child
     end
-    
+
     def child=(child)
       child.parent = self
       @child = child

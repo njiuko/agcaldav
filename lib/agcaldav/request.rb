@@ -18,7 +18,7 @@ module AgCalDAV
                 @displayname = displayname
                 @description = description
             end
-            
+
             def to_xml
                 xml.c :mkcalendar, NAMESPACES do
                     xml.d :set do
@@ -29,7 +29,7 @@ module AgCalDAV
                     end
                 end
             end
-        end    
+        end
 
         class ReportVEVENT < Base
             attr_accessor :tstart, :tend
@@ -55,7 +55,7 @@ module AgCalDAV
                     end
                 end
             end
-        end    
+        end
 
         class ReportVTODO < Base
             def to_xml
@@ -71,6 +71,6 @@ module AgCalDAV
                     end
                 end
             end
-        end    
+        end
     end
 end
