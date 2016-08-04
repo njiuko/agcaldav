@@ -62,7 +62,7 @@ module AgCalDAV
       response = __create_http.start do |http|
         req = Net::HTTP::Propfind.new(@url, initheader = {'Content-Type'=>'application/xml'} )
 
-        auth("PROPFIND", req)
+        add_auth("PROPFIND", req)
 
         http.request(req)
       end
@@ -85,7 +85,7 @@ module AgCalDAV
       __create_http.start do |http|
         req = Net::HTTP::Report.new(@url, initheader = {'Content-Type'=>'application/xml'} )
 
-        auth("REPORT", req)
+        add_auth("REPORT", req)
 
         if data[:start].is_a? Integer
           req.body = AgCalDAV::Request::ReportVEVENT.new(Time.at(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
@@ -116,7 +116,7 @@ module AgCalDAV
       __create_http.start do |http|
         req = Net::HTTP::Get.new("#{@url}/#{uuid}.ics")
 
-        auth("GET", req)
+        add_auth("GET", req)
 
         res = http.request( req )
       end
@@ -137,7 +137,7 @@ module AgCalDAV
       __create_http.start do |http|
         req = Net::HTTP::Delete.new("#{@url}/#{uuid}.ics")
 
-        auth("DELETE", req)
+        add_auth("DELETE", req)
 
         res = http.request( req )
       end
@@ -180,7 +180,7 @@ module AgCalDAV
         req                  = Net::HTTP::Put.new("#{@url}/#{event.uid}.ics")
         req['Content-Type']  = 'text/calendar'
 
-        auth("PUT", req)
+        add_auth("PUT", req)
 
         req.body = calendar_ical
         res      = http.request(req)
@@ -201,7 +201,7 @@ module AgCalDAV
 
     private
 
-    def auth(method, request)
+    def add_auth(method, request)
       if not @authtype == 'digest'
         request.basic_auth @user, @password
       else
@@ -231,11 +231,8 @@ module AgCalDAV
 
       __create_http.start do |http|
         req = Net::HTTP::Get.new("#{@url}/#{uuid}.ics")
-        if not @authtype == 'digest'
-          req.basic_auth @user, @password
-        else
-          req.add_field 'Authorization', digestauth('GET')
-        end
+
+        add_auth("GET", req)
 
         res = http.request( req )
       end
