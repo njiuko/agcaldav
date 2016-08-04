@@ -11,12 +11,6 @@ module Net
             REQUEST_HAS_BODY = true
             RESPONSE_HAS_BODY = true
         end
-
-        class Propfind < HTTPRequest
-            METHOD = 'PROPFIND'
-            REQUEST_HAS_BODY = true
-            RESPONSE_HAS_BODY = true
-        end
     end
 end
 
