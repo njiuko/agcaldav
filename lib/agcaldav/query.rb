@@ -29,11 +29,6 @@ module AgCalDAV
       end
     end
 
-    def todo(param = nil)
-      self.child = Filter::Component.new("VTODO")
-      self.child
-    end
-
     def child=(child)
       child.parent = self
       @child = child
@@ -41,11 +36,6 @@ module AgCalDAV
 
     def self.event( param=nil )
         self.new.event( param )
-    end
-
-
-    def self.todo( param=nil )
-        self.new.todo
     end
   end
 end
