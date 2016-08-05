@@ -61,7 +61,7 @@ module AgCalDAV
     def info
       response = __create_http.start do |http|
         req = Net::HTTP::Propfind.new(@url, initheader = {'Content-Type'=>'application/xml'} )
-
+        #FIXME: No xml query body assigned yet
         add_auth("PROPFIND", req)
 
         http.request(req)
@@ -151,6 +151,8 @@ module AgCalDAV
       end
     end
 
+
+
     def create_event event
       calendar = Icalendar::Calendar.new
 
@@ -190,13 +192,80 @@ module AgCalDAV
       find_event(event.uid)
     end
 
-    def update_event event
-      #TODO... fix me
-      if delete_event event[:uid]
-        create_event event
-      else
-        return false
+    # Careful: etag needs surrounding quotes
+    def update_event(etag, event, data)
+      calendar = Icalendar::Calendar.new
+
+      event = calendar.event do |e|
+        e.summary = data[:title] ? data[:title] : event.summary
+        e.description = data[:description] ? data[:description] : event.description
+        e.dtstart      = data[:start] ? DateTime.parse(data[:start]) : event.dtstart
+        e.dtend        = data[:end] ? DateTime.parse(data[:end]) : event.dtend
+        e.categories   = data[:categories] ? data[:categories] : event.categories
+        e.contact      = data[:contact] ? data[:contact] : event.contact
+        e.attendee     = data[:attendee] ? data[:attendee] : event.attendee
+        e.duration     = data[:duration] ? data[:duration] : event.duration
+        e.transp       = data[:accessibility] ? data[:accessibility] : event.transp #PUBLIC, PRIVATE, CONFIDENTIAL
+        e.location     = data[:location] ? data[:location] : event.location
+        e.geo          = data[:geo_location] ? data[:geo_location] : event.geo
+        e.status       = data[:status] ? data[:status] : event.status
+        e.uid          = event.uid
       end
+
+      calendar_ical = calendar.to_ical
+
+      res           = nil
+      http          = Net::HTTP.new(@host, @port)
+
+      __create_http.start do |http|
+        req                  = Net::HTTP::Put.new("#{@url}/#{event.uid}.ics")
+        req['Content-Type']  = 'text/calendar'
+        req['If-Match']      = etag
+        add_auth("PUT", req)
+
+        req.body = calendar_ical
+        res      = http.request(req)
+      end
+
+      errorhandling(res)
+      find_event(event.uid)
+
+    end
+
+    def create_calendar(data)
+      res           = nil
+      http          = Net::HTTP.new(@host, @port)
+
+      __create_http.start do |http|
+        req = Net::HTTP::Mkcalendar.new(@url, initheader = {'Content-Type'=>'application/xml'} )
+        req.body = AgCalDAV::Request::Mkcalendar.new(data[:displayname], data[:description]).to_xml
+        req['DAV'] = "resource-must-be-null"
+        add_auth("MKCALENDAR", req)
+
+        res = http.request(req)
+      end
+
+      errorhandling(res)
+      info
+
+    end
+
+    def delete_calendar
+      res = __create_http.start do |http|
+        req = Net::HTTP::Delete.new(@url)
+        add_auth("DELETE", req)
+
+        res = http.request(req)
+      end
+
+        errorhandling(res)
+
+        # accept any success code
+        if res.code.to_i.between?(200,299)
+          return true
+        else
+          return false
+        end
     end
 
     private
@@ -255,8 +324,12 @@ module AgCalDAV
       case response.code.to_i
       when 401
         raise AuthenticationError
+      when 405
+        raise NotAllowedError
       when 410
         raise NotExistError
+      when 412
+        raise PreconditionFailed
       when 500
         raise APIError
       end
@@ -265,6 +338,8 @@ module AgCalDAV
 
   class AgCalDAVError < StandardError; end
 
+  class PreconditionFailed  < AgCalDAVError; end
+  class NotAllowedError     < AgCalDAVError; end
   class AuthenticationError < AgCalDAVError; end
   class DuplicateError      < AgCalDAVError; end
   class APIError            < AgCalDAVError; end
