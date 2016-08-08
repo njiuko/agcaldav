@@ -151,28 +151,28 @@ module AgCalDAV
       end
     end
 
-
-
-    def create_event event
+    def set_event(data)
       calendar = Icalendar::Calendar.new
 
       event = calendar.event do |e|
-        e.dtstart      = DateTime.parse(event[:start])
-        e.dtend        = DateTime.parse(event[:end])
-        e.categories   = event[:categories]
-        e.contact      = event[:contact]
-        e.attendee     = event[:attendee]
-        e.duration     = event[:duration]
-        e.summary      = event[:title]
-        e.description  = event[:description]
-        e.transp       = event[:accessibility] #PUBLIC, PRIVATE, CONFIDENTIAL
-        e.location     = event[:location]
-        e.geo          = event[:geo_location]
-        e.status       = event[:status]
-        e.url          = event[:url]
-      end
+        e.dtstart      = DateTime.parse(data[:start])
+        e.dtend        = DateTime.parse(data[:end])
+        e.categories   = data[:categories]
+        e.contact      = data[:contact]
+        e.attendee     = data[:attendee]
+        e.duration     = data[:duration]
+        e.summary      = data[:title]
+        e.description  = data[:description]
+        e.transp       = data[:accessibility] #PUBLIC, PRIVATE, CONFIDENTIAL
+        e.location     = data[:location]
+        e.geo          = data[:geo_location]
+        e.status       = data[:status]
+        e.url          = data[:url]
 
-      raise DuplicateError if entry_with_uuid_exists?(event.uid)
+        if data[:uid]
+          e.uid = data[:uid]
+        end
+      end
 
       calendar_ical = calendar.to_ical
       res           = nil
@@ -181,55 +181,18 @@ module AgCalDAV
       __create_http.start do |http|
         req                  = Net::HTTP::Put.new("#{@url}/#{event.uid}.ics")
         req['Content-Type']  = 'text/calendar'
-
         add_auth("PUT", req)
-
         req.body = calendar_ical
-        res      = http.request(req)
+
+        if data[:etag].present?
+          req['If-Match'] = %Q/"#{data[:etag].gsub(/\A['"]+|['"]+\Z/, "")}"/
+        end
+
+        res = http.request(req)
       end
 
       errorhandling(res)
       find_event(event.uid)
-    end
-
-    # Careful: etag needs surrounding quotes
-    def update_event(etag, event, data)
-      calendar = Icalendar::Calendar.new
-
-      event = calendar.event do |e|
-        e.summary = data[:title] ? data[:title] : event.summary
-        e.description = data[:description] ? data[:description] : event.description
-        e.dtstart      = data[:start] ? DateTime.parse(data[:start]) : event.dtstart
-        e.dtend        = data[:end] ? DateTime.parse(data[:end]) : event.dtend
-        e.categories   = data[:categories] ? data[:categories] : event.categories
-        e.contact      = data[:contact] ? data[:contact] : event.contact
-        e.attendee     = data[:attendee] ? data[:attendee] : event.attendee
-        e.duration     = data[:duration] ? data[:duration] : event.duration
-        e.transp       = data[:accessibility] ? data[:accessibility] : event.transp #PUBLIC, PRIVATE, CONFIDENTIAL
-        e.location     = data[:location] ? data[:location] : event.location
-        e.geo          = data[:geo_location] ? data[:geo_location] : event.geo
-        e.status       = data[:status] ? data[:status] : event.status
-        e.uid          = event.uid
-      end
-
-      calendar_ical = calendar.to_ical
-
-      res           = nil
-      http          = Net::HTTP.new(@host, @port)
-
-      __create_http.start do |http|
-        req                  = Net::HTTP::Put.new("#{@url}/#{event.uid}.ics")
-        req['Content-Type']  = 'text/calendar'
-        req['If-Match']      = etag
-        add_auth("PUT", req)
-
-        req.body = calendar_ical
-        res      = http.request(req)
-      end
-
-      errorhandling(res)
-      find_event(event.uid)
-
     end
 
     def create_calendar(data)
@@ -258,14 +221,14 @@ module AgCalDAV
         res = http.request(req)
       end
 
-        errorhandling(res)
+      errorhandling(res)
 
-        # accept any success code
-        if res.code.to_i.between?(200,299)
-          return true
-        else
-          return false
-        end
+      # accept any success code
+      if res.code.to_i.between?(200,299)
+        return true
+      else
+        return false
+      end
     end
 
     private
@@ -324,6 +287,8 @@ module AgCalDAV
       case response.code.to_i
       when 401
         raise AuthenticationError
+      when 404
+        raise NotFoundError
       when 405
         raise NotAllowedError
       when 410
@@ -338,6 +303,7 @@ module AgCalDAV
 
   class AgCalDAVError < StandardError; end
 
+  class NotFoundError       < AgCalDAVError; end
   class PreconditionFailed  < AgCalDAVError; end
   class NotAllowedError     < AgCalDAVError; end
   class AuthenticationError < AgCalDAVError; end
