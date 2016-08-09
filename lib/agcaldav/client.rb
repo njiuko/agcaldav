@@ -231,6 +231,37 @@ module AgCalDAV
       end
     end
 
+    def manage_shares(data)
+        res           = nil
+        http          = Net::HTTP.new(@host, @port)
+
+        raise TypeNotSupported if data[:type] && data[:type] != :email
+
+        __create_http.start do |http|
+          req = Net::HTTP::Post.new(@url, initheader = {'Content-Type'=>'application/xml'} )
+          req.body = AgCalDAV::Request::PostSharing.new(
+            data[:adds].map do |add| "mailto:#{add}" end,
+            data[:summary],
+            data[:common_name],
+            data[:privilege],
+            data[:removes]).to_xml
+          req['Content-Length'] = "xxxx"
+
+          puts req.body
+          add_auth("POST", req)
+
+          res = http.request(req)
+        end
+
+        errorhandling(res)
+
+        if res.code.to_i.between?(200,299)
+          return true
+        else
+          return false
+        end
+      end
+
     private
 
     def add_auth(method, request)
