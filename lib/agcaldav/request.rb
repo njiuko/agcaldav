@@ -17,6 +17,7 @@ module AgCalDAV
             def initialize(displayname = nil, description = nil)
                 @displayname = displayname
                 @description = description
+                super()
             end
 
             def to_xml

@@ -61,7 +61,7 @@ module AgCalDAV
     def info
       response = __create_http.start do |http|
         req = Net::HTTP::Propfind.new(@url, initheader = {'Content-Type'=>'application/xml'} )
-
+        #FIXME: No xml query body assigned yet
         add_auth("PROPFIND", req)
 
         http.request(req)
@@ -151,26 +151,28 @@ module AgCalDAV
       end
     end
 
-    def create_event event
+    def set_event(data)
       calendar = Icalendar::Calendar.new
 
       event = calendar.event do |e|
-        e.dtstart      = DateTime.parse(event[:start])
-        e.dtend        = DateTime.parse(event[:end])
-        e.categories   = event[:categories]
-        e.contact      = event[:contact]
-        e.attendee     = event[:attendee]
-        e.duration     = event[:duration]
-        e.summary      = event[:title]
-        e.description  = event[:description]
-        e.transp       = event[:accessibility] #PUBLIC, PRIVATE, CONFIDENTIAL
-        e.location     = event[:location]
-        e.geo          = event[:geo_location]
-        e.status       = event[:status]
-        e.url          = event[:url]
-      end
+        e.dtstart      = DateTime.parse(data[:start])
+        e.dtend        = DateTime.parse(data[:end])
+        e.categories   = data[:categories]
+        e.contact      = data[:contact]
+        e.attendee     = data[:attendee]
+        e.duration     = data[:duration]
+        e.summary      = data[:title]
+        e.description  = data[:description]
+        e.transp       = data[:accessibility] #PUBLIC, PRIVATE, CONFIDENTIAL
+        e.location     = data[:location]
+        e.geo          = data[:geo_location]
+        e.status       = data[:status]
+        e.url          = data[:url]
 
-      raise DuplicateError if entry_with_uuid_exists?(event.uid)
+        if data[:uid]
+          e.uid = data[:uid]
+        end
+      end
 
       calendar_ical = calendar.to_ical
       res           = nil
@@ -179,21 +181,51 @@ module AgCalDAV
       __create_http.start do |http|
         req                  = Net::HTTP::Put.new("#{@url}/#{event.uid}.ics")
         req['Content-Type']  = 'text/calendar'
-
         add_auth("PUT", req)
-
         req.body = calendar_ical
-        res      = http.request(req)
+
+        if data[:etag].present?
+          req['If-Match'] = %Q/"#{data[:etag].gsub(/\A['"]+|['"]+\Z/, "")}"/
+        end
+
+        res = http.request(req)
       end
 
       errorhandling(res)
       find_event(event.uid)
     end
 
-    def update_event event
-      #TODO... fix me
-      if delete_event event[:uid]
-        create_event event
+    def create_calendar(data)
+      res           = nil
+      http          = Net::HTTP.new(@host, @port)
+
+      __create_http.start do |http|
+        req = Net::HTTP::Mkcalendar.new(@url, initheader = {'Content-Type'=>'application/xml'} )
+        req.body = AgCalDAV::Request::Mkcalendar.new(data[:displayname], data[:description]).to_xml
+        req['DAV'] = "resource-must-be-null"
+        add_auth("MKCALENDAR", req)
+
+        res = http.request(req)
+      end
+
+      errorhandling(res)
+      info
+
+    end
+
+    def delete_calendar
+      res = __create_http.start do |http|
+        req = Net::HTTP::Delete.new(@url)
+        add_auth("DELETE", req)
+
+        res = http.request(req)
+      end
+
+      errorhandling(res)
+
+      # accept any success code
+      if res.code.to_i.between?(200,299)
+        return true
       else
         return false
       end
@@ -255,8 +287,14 @@ module AgCalDAV
       case response.code.to_i
       when 401
         raise AuthenticationError
+      when 404
+        raise NotFoundError
+      when 405
+        raise NotAllowedError
       when 410
         raise NotExistError
+      when 412
+        raise PreconditionFailed
       when 500
         raise APIError
       end
@@ -265,6 +303,9 @@ module AgCalDAV
 
   class AgCalDAVError < StandardError; end
 
+  class NotFoundError       < AgCalDAVError; end
+  class PreconditionFailed  < AgCalDAVError; end
+  class NotAllowedError     < AgCalDAVError; end
   class AuthenticationError < AgCalDAVError; end
   class DuplicateError      < AgCalDAVError; end
   class APIError            < AgCalDAVError; end
