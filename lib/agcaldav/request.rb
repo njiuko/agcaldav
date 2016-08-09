@@ -30,6 +30,7 @@ module AgCalDAV
             xml.cs :share, SHARING_NAMESPACES do
               unless adds.empty?
                 adds.each do |add|
+                  add = "mailto:#{add}"
                   xml.cs :set do
                     xml.d :href, add
                     xml.cs :summary, summary unless summary.nil?
@@ -40,6 +41,7 @@ module AgCalDAV
               end
               unless removes.empty?
                 removes.each do |remove|
+                  remove = "mailto:#{remove}"
                   xml.cs :remove do
                     xml.d :href, remove
                   end

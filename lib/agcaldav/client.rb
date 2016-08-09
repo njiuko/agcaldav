@@ -142,12 +142,11 @@ module AgCalDAV
         res = http.request( req )
       end
 
-      errorhandling res
       # accept any success code
       if res.code.to_i.between?(200,299)
-        return true
+        true
       else
-        return false
+        errorhandling(res)
       end
     end
 
@@ -184,7 +183,7 @@ module AgCalDAV
         add_auth("PUT", req)
         req.body = calendar_ical
 
-        if data[:etag].present?
+        if data[:etag]
           req['If-Match'] = %Q/"#{data[:etag].gsub(/\A['"]+|['"]+\Z/, "")}"/
         end
 
@@ -221,13 +220,11 @@ module AgCalDAV
         res = http.request(req)
       end
 
-      errorhandling(res)
-
       # accept any success code
       if res.code.to_i.between?(200,299)
-        return true
+        true
       else
-        return false
+        errorhandling(res)
       end
     end
 
@@ -240,25 +237,21 @@ module AgCalDAV
         __create_http.start do |http|
           req = Net::HTTP::Post.new(@url, initheader = {'Content-Type'=>'application/xml'} )
           req.body = AgCalDAV::Request::PostSharing.new(
-            data[:adds].map do |add| "mailto:#{add}" end,
+            data[:adds],
             data[:summary],
             data[:common_name],
             data[:privilege],
             data[:removes]).to_xml
           req['Content-Length'] = "xxxx"
-
-          puts req.body
           add_auth("POST", req)
 
           res = http.request(req)
         end
 
-        errorhandling(res)
-
         if res.code.to_i.between?(200,299)
-          return true
+          true
         else
-          return false
+          errorhandling(res)
         end
       end
 
