@@ -17,7 +17,6 @@ module AgCalDAV
           attr_accessor :adds, :removes, :summary, :privilege, :common_name
 
           def initialize(adds = nil, summary = nil, common_name = nil, privilege = nil, removes = nil)
-              puts adds
               @adds = adds || []
               @summary = summary
               @privilege = privilege

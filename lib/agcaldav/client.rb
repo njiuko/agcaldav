@@ -186,12 +186,11 @@ module AgCalDAV
         if data[:etag]
           req['If-Match'] = %Q/"#{data[:etag].gsub(/\A['"]+|['"]+\Z/, "")}"/
         end
-
         res = http.request(req)
       end
 
       errorhandling(res)
-      find_event(event.uid)
+      res['etag']
     end
 
     def create_calendar(data)
@@ -327,6 +326,7 @@ module AgCalDAV
 
   class AgCalDAVError < StandardError; end
 
+  class TypeNotSupported    < AgCalDAVError; end
   class NotFoundError       < AgCalDAVError; end
   class PreconditionFailed  < AgCalDAVError; end
   class NotAllowedError     < AgCalDAVError; end
