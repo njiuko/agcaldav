@@ -88,10 +88,10 @@ module AgCalDAV
         add_auth("REPORT", req)
 
         if data[:start].is_a? Integer
-          req.body = AgCalDAV::Request::ReportVEVENT.new(Time.at(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
+          req.body = AgCalDAV::XmlRequestBuilder::ReportVEVENT.new(Time.at(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
                                                         Time.at(data[:end]).utc.strftime("%Y%m%dT%H%M%S") ).to_xml
         else
-          req.body = AgCalDAV::Request::ReportVEVENT.new(Time.parse(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
+          req.body = AgCalDAV::XmlRequestBuilder::ReportVEVENT.new(Time.parse(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
                                                         Time.parse(data[:end]).utc.strftime("%Y%m%dT%H%M%S") ).to_xml
         end
         res = http.request(req)
@@ -199,7 +199,7 @@ module AgCalDAV
 
       __create_http.start do |http|
         req = Net::HTTP::Mkcalendar.new(@url, initheader = {'Content-Type'=>'application/xml'} )
-        req.body = AgCalDAV::Request::Mkcalendar.new(data[:displayname], data[:description]).to_xml
+        req.body = AgCalDAV::XmlRequestBuilder::Mkcalendar.new(data[:displayname], data[:description]).to_xml
         req['DAV'] = "resource-must-be-null"
         add_auth("MKCALENDAR", req)
 
@@ -235,7 +235,7 @@ module AgCalDAV
 
         __create_http.start do |http|
           req = Net::HTTP::Post.new(@url, initheader = {'Content-Type'=>'application/xml'} )
-          req.body = AgCalDAV::Request::PostSharing.new(
+          req.body = AgCalDAV::XmlRequestBuilder::PostSharing.new(
             data[:adds],
             data[:summary],
             data[:common_name],
