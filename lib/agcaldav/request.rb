@@ -1,8 +1,8 @@
 require 'builder'
 
 module AgCalDAV
-    NAMESPACES = { "xmlns:d" => 'DAV:', "xmlns:c" => "urn:ietf:params:xml:ns:caldav" }
-    SHARING_NAMESPACES = {"xmlns:d" => 'DAV:', "xmlns:cs" => "http://calendarserver.org/ns/"}
+    C_NAMESPACES         = {"xmlns:d" => 'DAV:', "xmlns:c" => "urn:ietf:params:xml:ns:caldav"}
+    CS_NAMESPACES = {"xmlns:d" => 'DAV:', "xmlns:cs" => "http://calendarserver.org/ns/"}
 
     module Request
         class Base
@@ -28,7 +28,7 @@ module AgCalDAV
           end
 
           def to_xml
-            xml.d :propfind, SHARING_NAMESPACES do
+            xml.d :propfind, CS_NAMESPACES do
               xml.d :prop do
                 build_properties
               end
@@ -64,7 +64,7 @@ module AgCalDAV
           end
 
           def to_xml
-            xml.cs :share, SHARING_NAMESPACES do
+            xml.cs :share, CS_NAMESPACES do
               unless adds.empty?
                 adds.each do |add|
                   add = "mailto:#{add}"
@@ -98,7 +98,7 @@ module AgCalDAV
             end
 
             def to_xml
-                xml.c :mkcalendar, NAMESPACES do
+                xml.c :mkcalendar, C_NAMESPACES do
                     xml.d :set do
                         xml.d :prop do
                             xml.d :displayname, displayname unless displayname.to_s.empty?
@@ -119,7 +119,7 @@ module AgCalDAV
             end
 
             def to_xml
-                xml.c 'calendar-query'.intern, NAMESPACES do
+                xml.c 'calendar-query'.intern, C_NAMESPACES do
                     xml.d :prop do
                         xml.d :getetag
                         xml.c 'calendar-data'.intern
@@ -137,7 +137,7 @@ module AgCalDAV
 
         class ReportVTODO < Base
             def to_xml
-                xml.c 'calendar-query'.intern, NAMESPACES do
+                xml.c 'calendar-query'.intern, C_NAMESPACES do
                     xml.d :prop do
                         xml.d :getetag
                         xml.c 'calendar-data'.intern
