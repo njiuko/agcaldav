@@ -1,6 +1,6 @@
 module AgCalDAV
   class Client
-    attr_reader :auth_type, :host, :port, :url, :user, :password, :ssl,
+    attr_reader :auth_type, :host, :port, :base_path, :user, :password, :ssl,
      :digest_auth, :duri, :proxy_host, :proxy_uri, :proxy_port
 
     def format=( fmt )
@@ -11,7 +11,7 @@ module AgCalDAV
       @format ||= Format::Debug.new
     end
 
-    def initialize( data )
+    def initialize(data)
       unless data[:proxy_uri].nil?
         proxy_uri   = URI(data[:proxy_uri])
         @proxy_host = proxy_uri.host
@@ -19,9 +19,10 @@ module AgCalDAV
       end
 
       uri = URI(data[:uri])
+
       @host     = uri.host
       @port     = uri.port.to_i
-      @url      = uri.path
+      @base_path = uri.path
       @user     = data[:user]
       @password = data[:password]
       @ssl      = uri.scheme == 'https'
@@ -47,7 +48,7 @@ module AgCalDAV
     end
 
     def info
-      req = AgCalDAV::Request.new(Net::HTTP::Propfind.new(@url), self)
+      req = AgCalDAV::Request.new(:propfind, self)
 
       req.add_header(content_type: "application/xml")
       req.add_body(AgCalDAV::XmlRequestBuilder::PROPFINDCalendar.new(properties: [:displayname, :sync_token, :getctag]).to_xml)
@@ -67,7 +68,7 @@ module AgCalDAV
     def find_events(data)
 
       events = []
-      req = AgCalDAV::Request.new(Net::HTTP::Report.new(@url), self)
+      req = AgCalDAV::Request.new(:report, self)
       req.add_header(depth: "1", content_type: "application/xml")
 
       if data[:start].is_a? Integer
@@ -94,7 +95,8 @@ module AgCalDAV
     end
 
     def find_event uuid
-      req = AgCalDAV::Request.new(Net::HTTP::Get.new("#{@url}/#{uuid}.ics"), self)
+      req = AgCalDAV::Request.new(:get, self, path: "#{uuid}.ics")
+
       res = req.run
 
       errorhandling res
@@ -108,10 +110,9 @@ module AgCalDAV
     end
 
     def delete_event uuid
-      req = AgCalDAV::Request.new(Net::HTTP::Delete.new("#{@url}/#{uuid}.ics"), self)
+      req = AgCalDAV::Request.new(:delete, self, path: "#{uuid}.ics")
       res = req.run
 
-      # accept any success code
       if res.code.to_i.between?(200,299)
         true
       else
@@ -144,7 +145,8 @@ module AgCalDAV
 
       calendar_ical = calendar.to_ical
 
-      req                  = AgCalDAV::Request.new(Net::HTTP::Put.new("#{@url}/#{event.uid}.ics"), self)
+      req = AgCalDAV::Request.new(:put, self, path: "#{event.uid}.ics")
+
       req.add_header(content_type: "text/calendar")
       req.add_body(calendar_ical)
 
@@ -158,9 +160,11 @@ module AgCalDAV
     end
 
     def create_calendar(data)
-      req = AgCalDAV::Request.new(Net::HTTP::Mkcalendar.new(@url), self)
+      req = AgCalDAV::Request.new(:mkcalendar, self)
+
       req.add_body(AgCalDAV::XmlRequestBuilder::Mkcalendar.new(data[:displayname], data[:description]).to_xml)
       req.add_header(dav: "resource-must-be-null", content_type: "application/xml")
+
       res = req.run
 
       errorhandling(res)
@@ -168,7 +172,7 @@ module AgCalDAV
     end
 
     def delete_calendar
-      req = AgCalDAV::Request.new(Net::HTTP::Delete.new(@url), self)
+      req = AgCalDAV::Request.new(:delete, self)
       res = req.run
 
       # accept any success code
@@ -180,9 +184,10 @@ module AgCalDAV
     end
 
     def manage_shares(data)
-        raise AgCalDAV::Errors::TypeNotSupportedError if data[:type] && data[:type] != :email
+        raise AgCalDAV::Errors::ShareeTypeNotSupportedError if data[:type] && data[:type] != :email
 
-        req = AgCalDAV::Request.new(Net::HTTP::Post.new(@url), self)
+        req = AgCalDAV::Request.new(:post, self)
+
         req.add_body(AgCalDAV::XmlRequestBuilder::PostSharing.new(
           data[:adds],
           data[:summary],

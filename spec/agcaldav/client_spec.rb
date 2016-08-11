@@ -20,7 +20,7 @@ describe AgCalDAV::Client do
     end
 
     it "delete calendar" do
-      FakeWeb.register_uri(:delete, "http://user@localhost:5232/user/calendar",
+      FakeWeb.register_uri(:delete, "http://user@localhost:5232/user/calendar/",
                                     [{status: ["204", "No Content"]}, {status: ["404", "Not Found"]}])
       r = @c.delete_calendar
       expect(r).to be (true)
@@ -54,7 +54,7 @@ describe AgCalDAV::Client do
   end
 
   describe "manage_shares" do
-    FakeWeb.register_uri(:post, "http://user@localhost:5232/user/calendar", [{status: ["200", "OK"]},
+    FakeWeb.register_uri(:post, "http://user@localhost:5232/user/calendar/", [{status: ["200", "OK"]},
                                                                              {status: ["200", "OK"]}])
     it "is type email" do
       type = :email
@@ -66,7 +66,7 @@ describe AgCalDAV::Client do
       type = :other
       expect {
         @c.manage_shares adds: ["test@test.de"], privilege: "write-read", type: type
-      }.to raise_error(AgCalDAV::Errors::TypeNotSupportedError)
+      }.to raise_error(AgCalDAV::Errors::ShareeTypeNotSupportedError)
     end
 
     it "add one share" do
@@ -95,7 +95,7 @@ describe AgCalDAV::Client do
   end
 
   it "find 2 events" do
-    FakeWeb.register_uri(:report, "http://user@localhost:5232/user/calendar", body: File.open('spec/fixtures/report.xml'))
+    FakeWeb.register_uri(:report, "http://user@localhost:5232/user/calendar/", body: File.open('spec/fixtures/report.xml'))
     r = @c.find_events(start: "2001-02-02 07:00", end: "2000-02-03 23:59")
     expect(r).to be
     expect(r.length).to eq 2
@@ -103,7 +103,7 @@ describe AgCalDAV::Client do
 
   describe "info" do
     it "fetches the calendar info" do
-      FakeWeb.register_uri(:propfind, "http://user@localhost:5232/user/calendar", body: File.open('spec/fixtures/calendar_info.xml') )
+      FakeWeb.register_uri(:propfind, "http://user@localhost:5232/user/calendar/", body: File.open('spec/fixtures/calendar_info.xml') )
       info = @c.info
       expect(info[:displayname]).to eq("Test Calendar")
       expect(info[:ctag]).to eq("http://sabre.io/ns/sync/15")

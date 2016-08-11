@@ -1,33 +1,15 @@
 module AgCalDAV
   class Request
-    attr_accessor :request, :http
-    attr_reader :client
+    attr_accessor :path
+    attr_reader :client, :request, :http
 
-    def initialize(method, client)
+    def initialize(method, client, path: "")
       @client  = client
-      @http    = init_http
-      @request = init_request(method)
+      @path    = "#{client.base_path}/#{path}"
+      @http    = build_http
+      @request = build_request(method)
+
       add_auth
-    end
-
-    def init_http
-      unless client.proxy_uri
-        http = Net::HTTP.new(client.host, client.port)
-      else
-        http = Net::HTTP.new(client.host, client.port, client.proxy_host, client.proxy_port)
-      end
-
-      if client.ssl
-        http.use_ssl = client.ssl
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      end
-
-      http
-    end
-
-    def init_request(method)
-      raise StandardError unless method.is_a? Net::HTTPRequest
-      method
     end
 
     def add_body(body)
@@ -42,17 +24,52 @@ module AgCalDAV
     end
 
     def run
-        @http.request(request)
+      @http.request(request)
     end
 
     private
+
+    def build_http
+      unless client.proxy_uri
+        http = Net::HTTP.new(client.host, client.port)
+      else
+        http = Net::HTTP.new(client.host, client.port, client.proxy_host, client.proxy_port)
+      end
+
+      if client.ssl
+        http.use_ssl = client.ssl
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
+
+      http
+    end
+
+    def build_request(method)
+      case method
+      when :get
+        Net::HTTP::Get.new(path)
+      when :post
+        Net::HTTP::Post.new(path)
+      when :put
+        Net::HTTP::Put.new(path)
+      when :delete
+        Net::HTTP::Delete.new(path)
+      when :propfind
+        Net::HTTP::Propfind.new(path)
+      when :report
+        Net::HTTP::Report.new(path)
+      when :mkcalendar
+        Net::HTTP::Mkcalendar.new(path)
+      else
+        raise HTTPMethodNotSupportedError, method
+      end
+    end
 
     def add_auth
       unless client.auth_type == 'digest'
         request.basic_auth client.user, client.password
       else
-        #FIXME method in line needs to be something like "PROPFIND" or other http methods  name strings
-        #request.add_field 'Authorization', digestauth(method)
+        request.add_field 'Authorization', digestauth(method.to_s.upcase)
       end
     end
 
