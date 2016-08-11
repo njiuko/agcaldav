@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe AgCalDAV::Request::PROPFINDCalendar do
+RSpec.describe AgCalDAV::XmlRequestBuilder::PROPFINDCalendar do
   let(:propfind) { described_class.new(properties: [:displayname, :getctag, :sync_token]) }
 
   describe "#to_xml" do

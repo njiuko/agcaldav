@@ -1,154 +1,93 @@
-require 'builder'
-
 module AgCalDAV
-    C_NAMESPACES  = {"xmlns:d" => 'DAV:', "xmlns:c" => "urn:ietf:params:xml:ns:caldav"}
-    CS_NAMESPACES = {"xmlns:d" => 'DAV:', "xmlns:cs" => "http://calendarserver.org/ns/"}
+  class Request
+    attr_accessor :path
+    attr_reader :client, :request, :http
 
-    module Request
-        class Base
-            def initialize
-                @xml = Builder::XmlMarkup.new(:indent => 2)
-                @xml.instruct!
-            end
-            attr :xml
-        end
+    def initialize(method, client, path: "")
+      @client  = client
+      @path    = "#{client.base_path}/#{path}"
+      @http    = build_http
+      @request = build_request(method)
 
-        class PROPFINDCalendar < Base
-          attr_reader :properties
-
-          PROPERTIES = {
-            displayname: :d,
-            getctag: :cs,
-            sync_token: :d
-          }
-
-          def initialize(properties:)
-            @properties = properties
-            super()
-          end
-
-          def to_xml
-            xml.d :propfind, CS_NAMESPACES do
-              xml.d :prop do
-                build_properties
-              end
-            end
-          end
-
-          def build_properties
-            properties.each do |property|
-              raise AgCalDAV::Errors::PropertyNotSupportedError, "Known properties are #{PROPERTIES}" unless PROPERTIES.keys.include?(property)
-
-              readable_property = property.to_s.gsub('_', '-').to_sym
-
-              case PROPERTIES[property]
-              when :d
-                xml.d readable_property
-              when :cs
-                xml.cs readable_property
-              end
-            end
-          end
-        end
-
-        class PostSharing < Base
-          attr_accessor :adds, :removes, :summary, :privilege, :common_name
-
-          def initialize(adds = nil, summary = nil, common_name = nil, privilege = nil, removes = nil)
-              @adds = adds || []
-              @summary = summary
-              @privilege = privilege
-              @common_name = common_name
-              @removes = removes || []
-              super()
-          end
-
-          def to_xml
-            xml.cs :share, CS_NAMESPACES do
-              unless adds.empty?
-                adds.each do |add|
-                  add = "mailto:#{add}"
-                  xml.cs :set do
-                    xml.d :href, add
-                    xml.cs :summary, summary unless summary.nil?
-                    xml.tag! "cs:common-name", common_name unless common_name.nil?
-                    xml.tag! "cs:#{privilege}"
-                  end
-                end
-              end
-              unless removes.empty?
-                removes.each do |remove|
-                  remove = "mailto:#{remove}"
-                  xml.cs :remove do
-                    xml.d :href, remove
-                  end
-                end
-              end
-            end
-          end
-        end
-
-        class Mkcalendar < Base
-            attr_accessor :displayname, :description
-
-            def initialize(displayname = nil, description = nil)
-                @displayname = displayname
-                @description = description
-                super()
-            end
-
-            def to_xml
-                xml.c :mkcalendar, C_NAMESPACES do
-                    xml.d :set do
-                        xml.d :prop do
-                            xml.d :displayname, displayname unless displayname.to_s.empty?
-                            xml.tag! "c:calendar-description", description, "xml:lang" => "en" unless description.to_s.empty?
-                        end
-                    end
-                end
-            end
-        end
-
-        class ReportVEVENT < Base
-            attr_accessor :tstart, :tend
-
-            def initialize( tstart=nil, tend=nil )
-                @tstart = tstart
-                @tend   = tend
-                super()
-            end
-
-            def to_xml
-                xml.c 'calendar-query'.intern, C_NAMESPACES do
-                    xml.d :prop do
-                        xml.d :getetag
-                        xml.c 'calendar-data'.intern
-                    end
-                    xml.c :filter do
-                        xml.c 'comp-filter'.intern, :name=> 'VCALENDAR' do
-                            xml.c 'comp-filter'.intern, :name=> 'VEVENT' do
-                                xml.c 'time-range'.intern, :start=> "#{tstart}Z", :end=> "#{tend}Z"
-                            end
-                        end
-                    end
-                end
-            end
-        end
-
-        class ReportVTODO < Base
-            def to_xml
-                xml.c 'calendar-query'.intern, C_NAMESPACES do
-                    xml.d :prop do
-                        xml.d :getetag
-                        xml.c 'calendar-data'.intern
-                    end
-                    xml.c :filter do
-                        xml.c 'comp-filter'.intern, :name=> 'VCALENDAR' do
-                            xml.c 'comp-filter'.intern, :name=> 'VTODO'
-                        end
-                    end
-                end
-            end
-        end
+      add_auth
     end
+
+    def add_body(body)
+      request.body = body
+    end
+
+    def add_header(data)
+      request['Content-Length']  = data[:content_length]  if data[:content_length]
+      request['If-Match']        = data[:if_match]        if data[:if_match]
+      request['Content-Type']    = data[:content_type]    if data[:content_type]
+      request['DAV']             = data[:dav]             if data[:dav]
+    end
+
+    def run
+      @http.request(request)
+    end
+
+    private
+
+    def build_http
+      unless client.proxy_uri
+        http = Net::HTTP.new(client.host, client.port)
+      else
+        http = Net::HTTP.new(client.host, client.port, client.proxy_host, client.proxy_port)
+      end
+
+      if client.ssl
+        http.use_ssl = client.ssl
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
+
+      http
+    end
+
+    def build_request(method)
+      case method
+      when :get
+        Net::HTTP::Get.new(path)
+      when :post
+        Net::HTTP::Post.new(path)
+      when :put
+        Net::HTTP::Put.new(path)
+      when :delete
+        Net::HTTP::Delete.new(path)
+      when :propfind
+        Net::HTTP::Propfind.new(path)
+      when :report
+        Net::HTTP::Report.new(path)
+      when :mkcalendar
+        Net::HTTP::Mkcalendar.new(path)
+      else
+        raise HTTPMethodNotSupportedError, method
+      end
+    end
+
+    def add_auth
+      unless client.auth_type == 'digest'
+        request.basic_auth client.user, client.password
+      else
+        request.add_field 'Authorization', digestauth(method.to_s.upcase)
+      end
+    end
+
+    def digestauth
+      h = Net::HTTP.new client.duri.host, client.duri.port
+
+      if client.ssl
+        h.use_ssl = client.ssl
+        h.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
+
+      req = Net::HTTP::Get.new client.duri.request_uri
+      res = h.request req
+      # res is a 401 response with a WWW-Authenticate header
+
+      auth = client.digest_auth.auth_header client.duri, res['www-authenticate'], method
+
+      return auth
+    end
+  end
 end

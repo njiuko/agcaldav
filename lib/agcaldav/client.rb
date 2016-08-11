@@ -1,6 +1,7 @@
 module AgCalDAV
   class Client
-    attr_accessor :host, :port, :url, :user, :password, :ssl
+    attr_reader :auth_type, :host, :port, :base_path, :user, :password, :ssl,
+     :digest_auth, :duri, :proxy_host, :proxy_uri, :proxy_port
 
     def format=( fmt )
       @format = fmt
@@ -10,7 +11,7 @@ module AgCalDAV
       @format ||= Format::Debug.new
     end
 
-    def initialize( data )
+    def initialize(data)
       unless data[:proxy_uri].nil?
         proxy_uri   = URI(data[:proxy_uri])
         @proxy_host = proxy_uri.host
@@ -18,9 +19,10 @@ module AgCalDAV
       end
 
       uri = URI(data[:uri])
+
       @host     = uri.host
       @port     = uri.port.to_i
-      @url      = uri.path
+      @base_path = uri.path
       @user     = data[:user]
       @password = data[:password]
       @ssl      = uri.scheme == 'https'
@@ -45,33 +47,17 @@ module AgCalDAV
       end
     end
 
-    def __create_http
-      if @proxy_uri.nil?
-        http = Net::HTTP.new(@host, @port)
-      else
-        http = Net::HTTP.new(@host, @port, @proxy_host, @proxy_port)
-      end
-      if @ssl
-        http.use_ssl = @ssl
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      end
-      http
-    end
-
     def info
-      response = __create_http.start do |http|
-        req = Net::HTTP::Propfind.new(@url, initheader = {'Content-Type'=>'application/xml'} )
+      req = AgCalDAV::Request.new(:propfind, self)
 
-        req.body = AgCalDAV::Request::PROPFINDCalendar.new(properties: [:displayname, :sync_token, :getctag]).to_xml
+      req.add_header(content_type: "application/xml")
+      req.add_body(AgCalDAV::XmlRequestBuilder::PROPFINDCalendar.new(properties: [:displayname, :sync_token, :getctag]).to_xml)
 
-        add_auth("PROPFIND", req)
+      res = req.run
 
-        http.request(req)
-      end
+      errorhandling res
 
-      errorhandling response
-
-      xml = REXML::Document.new(response.body)
+      xml = REXML::Document.new(res.body)
 
       {
         displayname: REXML::XPath.first(xml, "//d:displayname").text,
@@ -80,24 +66,19 @@ module AgCalDAV
     end
 
     def find_events(data)
-      result = ""
+
       events = []
-      res    = nil
+      req = AgCalDAV::Request.new(:report, self)
+      req.add_header(depth: "1", content_type: "application/xml")
 
-      __create_http.start do |http|
-        req = Net::HTTP::Report.new(@url, initheader = {'Content-Type'=>'application/xml'} )
-        req["depth"] = 1
-        add_auth("REPORT", req)
-
-        if data[:start].is_a? Integer
-          req.body = AgCalDAV::Request::ReportVEVENT.new(Time.at(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
-                                                        Time.at(data[:end]).utc.strftime("%Y%m%dT%H%M%S") ).to_xml
-        else
-          req.body = AgCalDAV::Request::ReportVEVENT.new(Time.parse(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
-                                                        Time.parse(data[:end]).utc.strftime("%Y%m%dT%H%M%S") ).to_xml
-        end
-        res = http.request(req)
+      if data[:start].is_a? Integer
+        req.add_body(AgCalDAV::XmlRequestBuilder::ReportVEVENT.new(Time.at(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
+                                                      Time.at(data[:end]).utc.strftime("%Y%m%dT%H%M%S") ).to_xml)
+      else
+        req.add_body(AgCalDAV::XmlRequestBuilder::ReportVEVENT.new(Time.parse(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
+                                                      Time.parse(data[:end]).utc.strftime("%Y%m%dT%H%M%S") ).to_xml)
       end
+      res = req.run
 
       errorhandling res
       result = ""
@@ -114,14 +95,9 @@ module AgCalDAV
     end
 
     def find_event uuid
-      res = nil
-      __create_http.start do |http|
-        req = Net::HTTP::Get.new("#{@url}/#{uuid}.ics")
+      req = AgCalDAV::Request.new(:get, self, path: "#{uuid}.ics")
 
-        add_auth("GET", req)
-
-        res = http.request( req )
-      end
+      res = req.run
 
       errorhandling res
       begin
@@ -134,17 +110,9 @@ module AgCalDAV
     end
 
     def delete_event uuid
-      res = nil
+      req = AgCalDAV::Request.new(:delete, self, path: "#{uuid}.ics")
+      res = req.run
 
-      __create_http.start do |http|
-        req = Net::HTTP::Delete.new("#{@url}/#{uuid}.ics")
-
-        add_auth("DELETE", req)
-
-        res = http.request( req )
-      end
-
-      # accept any success code
       if res.code.to_i.between?(200,299)
         true
       else
@@ -176,52 +144,37 @@ module AgCalDAV
       end
 
       calendar_ical = calendar.to_ical
-      res           = nil
-      http          = Net::HTTP.new(@host, @port)
 
-      __create_http.start do |http|
-        req                  = Net::HTTP::Put.new("#{@url}/#{event.uid}.ics")
-        req['Content-Type']  = 'text/calendar'
-        add_auth("PUT", req)
-        req.body = calendar_ical
+      req = AgCalDAV::Request.new(:put, self, path: "#{event.uid}.ics")
 
-        if data[:etag]
-          req['If-Match'] = %Q/"#{data[:etag].gsub(/\A['"]+|['"]+\Z/, "")}"/
-        end
-        res = http.request(req)
+      req.add_header(content_type: "text/calendar")
+      req.add_body(calendar_ical)
+
+      if data[:etag]
+        req.add_header(if_match: %Q/"#{data[:etag].gsub(/\A['"]+|['"]+\Z/, "")}"/)
       end
+      res = req.run
 
       errorhandling(res)
       res['etag']
     end
 
     def create_calendar(data)
-      res           = nil
-      http          = Net::HTTP.new(@host, @port)
+      req = AgCalDAV::Request.new(:mkcalendar, self)
 
-      __create_http.start do |http|
-        req = Net::HTTP::Mkcalendar.new(@url, initheader = {'Content-Type'=>'application/xml'} )
-        req.body = AgCalDAV::Request::Mkcalendar.new(data[:displayname], data[:description]).to_xml
-        req['DAV'] = "resource-must-be-null"
-        add_auth("MKCALENDAR", req)
+      req.add_body(AgCalDAV::XmlRequestBuilder::Mkcalendar.new(data[:displayname], data[:description]).to_xml)
+      req.add_header(dav: "resource-must-be-null", content_type: "application/xml")
 
-        res = http.request(req)
-      end
+      res = req.run
 
       errorhandling(res)
       info
-
     end
 
     def delete_calendar
-      res = __create_http.start do |http|
-        req = Net::HTTP::Delete.new(@url)
-        add_auth("DELETE", req)
+      req = AgCalDAV::Request.new(:delete, self)
+      res = req.run
 
-        res = http.request(req)
-      end
-
-      # accept any success code
       if res.code.to_i.between?(200,299)
         true
       else
@@ -230,24 +183,19 @@ module AgCalDAV
     end
 
     def manage_shares(data)
-        res           = nil
-        http          = Net::HTTP.new(@host, @port)
+        raise AgCalDAV::Errors::ShareeTypeNotSupportedError if data[:type] && data[:type] != :email
 
-        raise AgCalDAV::Errors::TypeNotSupportedError if data[:type] && data[:type] != :email
+        req = AgCalDAV::Request.new(:post, self)
 
-        __create_http.start do |http|
-          req = Net::HTTP::Post.new(@url, initheader = {'Content-Type'=>'application/xml'} )
-          req.body = AgCalDAV::Request::PostSharing.new(
-            data[:adds],
-            data[:summary],
-            data[:common_name],
-            data[:privilege],
-            data[:removes]).to_xml
-          req['Content-Length'] = "xxxx"
-          add_auth("POST", req)
+        req.add_body(AgCalDAV::XmlRequestBuilder::PostSharing.new(
+          data[:adds],
+          data[:summary],
+          data[:common_name],
+          data[:privilege],
+          data[:removes]).to_xml)
+        req.add_header(content_length: "xxxx", content_type: "application/xml")
 
-          res = http.request(req)
-        end
+        res = req.run
 
         if res.code.to_i.between?(200,299)
           true
@@ -257,56 +205,6 @@ module AgCalDAV
       end
 
     private
-
-    def add_auth(method, request)
-      if not @authtype == 'digest'
-        request.basic_auth @user, @password
-      else
-        request.add_field 'Authorization', digestauth(method)
-      end
-    end
-
-    def digestauth method
-      h = Net::HTTP.new @duri.host, @duri.port
-
-      if @ssl
-        h.use_ssl = @ssl
-        h.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      end
-
-      req = Net::HTTP::Get.new @duri.request_uri
-      res = h.request req
-      # res is a 401 response with a WWW-Authenticate header
-
-      auth = @digest_auth.auth_header @duri, res['www-authenticate'], method
-
-      return auth
-    end
-
-    def entry_with_uuid_exists? uuid
-      res = nil
-
-      __create_http.start do |http|
-        req = Net::HTTP::Get.new("#{@url}/#{uuid}.ics")
-
-        add_auth("GET", req)
-
-        res = http.request( req )
-      end
-
-      begin
-        errorhandling res
-        Icalendar::Calendar.parse(res.body)
-      rescue
-        return false
-      end
-
-      if res.code.to_i == 404
-        false
-      elsif res.code.to_i.between?(200,299)
-        true
-      end
-    end
 
     def  errorhandling response
       case response.code.to_i
