@@ -70,7 +70,8 @@ describe AgCalDAV::Client do
     end
 
     it "add one share" do
-      #TODO
+      r = @c.manage_shares adds: ["test@test.de"], privilege: "write-read"
+      expect(r).to be(true) 
     end
   end
 
