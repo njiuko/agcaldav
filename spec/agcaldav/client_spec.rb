@@ -70,7 +70,7 @@ describe AgCalDAV::Client do
     end
 
     it "add one share" do
-      #TODO 
+      #TODO
     end
   end
 
