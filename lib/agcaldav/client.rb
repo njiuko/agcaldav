@@ -62,7 +62,7 @@ module AgCalDAV
       response = __create_http.start do |http|
         req = Net::HTTP::Propfind.new(@url, initheader = {'Content-Type'=>'application/xml'} )
 
-        req.body = AgCalDAV::Request::PROPFINDCalendar.new(properties: [:displayname, :sync_token, :ctag]).to_xml
+        req.body = AgCalDAV::Request::PROPFINDCalendar.new(properties: [:displayname, :sync_token, :getctag]).to_xml
 
         add_auth("PROPFIND", req)
 

@@ -9,6 +9,17 @@ RSpec.describe AgCalDAV::Request::PROPFINDCalendar do
     it "returns a valid xml" do
       expect(propfind.to_xml).to eq(expected_xml)
     end
+
+    context "error" do
+      let(:propfind) { described_class.new(properties: [:displayname, :etag, :sync_token]) }
+
+      it "raises an error if the not supported properties are selected" do
+        expect {
+          propfind.to_xml
+        }.to raise_error(AgCalDAV::Errors::PropertyNotSupportedError)
+      end
+
+    end
   end
 end
 

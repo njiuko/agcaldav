@@ -1,7 +1,7 @@
 require 'builder'
 
 module AgCalDAV
-    C_NAMESPACES         = {"xmlns:d" => 'DAV:', "xmlns:c" => "urn:ietf:params:xml:ns:caldav"}
+    C_NAMESPACES  = {"xmlns:d" => 'DAV:', "xmlns:c" => "urn:ietf:params:xml:ns:caldav"}
     CS_NAMESPACES = {"xmlns:d" => 'DAV:', "xmlns:cs" => "http://calendarserver.org/ns/"}
 
     module Request
@@ -37,7 +37,7 @@ module AgCalDAV
 
           def build_properties
             properties.each do |property|
-              raise PropertyNotSupportedError, "Known properties are #{SUPPORTED_PROPERTIES}" unless PROPERTIES.keys.include?(property)
+              raise AgCalDAV::Errors::PropertyNotSupportedError, "Known properties are #{PROPERTIES}" unless PROPERTIES.keys.include?(property)
 
               readable_property = property.to_s.gsub('_', '-').to_sym
 
