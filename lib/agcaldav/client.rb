@@ -175,7 +175,6 @@ module AgCalDAV
       req = AgCalDAV::Request.new(:delete, self)
       res = req.run
 
-      # accept any success code
       if res.code.to_i.between?(200,299)
         true
       else

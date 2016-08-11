@@ -14,7 +14,6 @@ module AgCalDAV
     class NotAllowedError     < APIError; end
     class AuthenticationError < APIError; end
     class NotExistError       < APIError; end
-
   end
 end
 
