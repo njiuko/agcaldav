@@ -7,6 +7,6 @@ require 'icalendar'
 require 'time'
 require 'date'
 
-['client.rb', 'request.rb', 'net.rb', 'query.rb', 'filter.rb', 'format.rb'].each do |f|
+['errors/errors.rb', 'client.rb', 'request.rb', 'net.rb', 'query.rb', 'filter.rb', 'format.rb'].each do |f|
     require File.join( File.dirname(__FILE__), 'agcaldav', f )
 end
