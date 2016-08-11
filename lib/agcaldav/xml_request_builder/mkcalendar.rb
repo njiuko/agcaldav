@@ -11,7 +11,7 @@ module AgCalDAV
       end
 
       def to_xml
-        xml.c :mkcalendar, NAMESPACES do
+        xml.c :mkcalendar, C_NAMESPACES do
           xml.d :set do
             xml.d :prop do
               xml.d :displayname, displayname unless displayname.to_s.empty?

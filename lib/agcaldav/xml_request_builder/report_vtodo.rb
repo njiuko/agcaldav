@@ -2,9 +2,8 @@ module AgCalDAV
   module XmlRequestBuilder
 
     class ReportVTODO < Base
-      
       def to_xml
-        xml.c 'calendar-query'.intern, NAMESPACES do
+        xml.c 'calendar-query'.intern, C_NAMESPACES do
           xml.d :prop do
             xml.d :getetag
             xml.c 'calendar-data'.intern

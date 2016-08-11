@@ -14,7 +14,7 @@ module AgCalDAV
       end
 
       def to_xml
-        xml.cs :share, SHARING_NAMESPACES do
+        xml.cs :share, CS_NAMESPACES do
           unless adds.empty?
             adds.each do |add|
               add = "mailto:#{add}"
