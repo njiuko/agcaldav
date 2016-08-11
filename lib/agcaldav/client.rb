@@ -233,7 +233,7 @@ module AgCalDAV
         res           = nil
         http          = Net::HTTP.new(@host, @port)
 
-        raise TypeNotSupported if data[:type] && data[:type] != :email
+        raise AgCalDAV::Errors::TypeNotSupportedError if data[:type] && data[:type] != :email
 
         __create_http.start do |http|
           req = Net::HTTP::Post.new(@url, initheader = {'Content-Type'=>'application/xml'} )
@@ -311,29 +311,18 @@ module AgCalDAV
     def  errorhandling response
       case response.code.to_i
       when 401
-        raise AuthenticationError
+        raise AgCalDAV::Errors::AuthenticationError
       when 404
-        raise NotFoundError
+        raise AgCalDAV::Errors::NotFoundError
       when 405
-        raise NotAllowedError
+        raise AgCalDAV::Errors::NotAllowedError
       when 410
-        raise NotExistError
+        raise AgCalDAV::Errors::NotExistError
       when 412
-        raise PreconditionFailed
+        raise AgCalDAV::Errors::PreconditionFailed
       when 500
-        raise APIError
+        raise AgCalDAV::Errors::APIError
       end
     end
   end
-
-  class AgCalDAVError < StandardError; end
-
-  class TypeNotSupported    < AgCalDAVError; end
-  class NotFoundError       < AgCalDAVError; end
-  class PreconditionFailed  < AgCalDAVError; end
-  class NotAllowedError     < AgCalDAVError; end
-  class AuthenticationError < AgCalDAVError; end
-  class DuplicateError      < AgCalDAVError; end
-  class APIError            < AgCalDAVError; end
-  class NotExistError       < AgCalDAVError; end
 end
