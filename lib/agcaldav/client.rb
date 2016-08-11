@@ -180,7 +180,6 @@ module AgCalDAV
     end
 
     def manage_shares(data)
-
         raise AgCalDAV::Errors::TypeNotSupportedError if data[:type] && data[:type] != :email
 
         req = AgCalDAV::Request.new(Net::HTTP::Post.new(@url), self)
@@ -202,31 +201,6 @@ module AgCalDAV
       end
 
     private
-
-    def entry_with_uuid_exists? uuid
-      res = nil
-
-      __create_http.start do |http|
-        req = Net::HTTP::Get.new("#{@url}/#{uuid}.ics")
-
-        add_auth("GET", req)
-
-        res = http.request( req )
-      end
-
-      begin
-        errorhandling res
-        Icalendar::Calendar.parse(res.body)
-      rescue
-        return false
-      end
-
-      if res.code.to_i == 404
-        false
-      elsif res.code.to_i.between?(200,299)
-        true
-      end
-    end
 
     def  errorhandling response
       case response.code.to_i
