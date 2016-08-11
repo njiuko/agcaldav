@@ -1,26 +1,30 @@
 module AgCalDAV
+    C_NAMESPACES  = {"xmlns:d" => 'DAV:', "xmlns:c" => "urn:ietf:params:xml:ns:caldav"}
+    CS_NAMESPACES = {"xmlns:d" => 'DAV:', "xmlns:cs" => "http://calendarserver.org/ns/"}
 
   class Request
     attr_accessor :request, :http
     attr_reader :client
 
     def initialize(method, client)
-      @client = client
-      @http         = init_http()
-      @request      = init_request(method)
-      add_auth()
+      @client  = client
+      @http    = init_http
+      @request = init_request(method)
+      add_auth
     end
 
-    def init_http()
+    def init_http
       unless client.proxy_uri
         http = Net::HTTP.new(client.host, client.port)
       else
         http = Net::HTTP.new(client.host, client.port, client.proxy_host, client.proxy_port)
       end
+
       if client.ssl
         http.use_ssl = client.ssl
         http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
+
       http
     end
 

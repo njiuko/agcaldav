@@ -27,7 +27,7 @@ describe AgCalDAV::Client do
 
       expect {
         @c.delete_calendar
-      }.to raise_error(AgCalDAV::NotFoundError)
+      }.to raise_error(AgCalDAV::Errors::NotFoundError)
     end
   end
 
@@ -66,7 +66,7 @@ describe AgCalDAV::Client do
       type = :other
       expect {
         @c.manage_shares adds: ["test@test.de"], privilege: "write-read", type: type
-      }.to raise_error(AgCalDAV::TypeNotSupported)
+      }.to raise_error(AgCalDAV::Errors::TypeNotSupportedError)
     end
 
     it "add one share" do
@@ -83,7 +83,7 @@ describe AgCalDAV::Client do
     expect(r).to be(true)
     expect {
       @c.delete_event(uid)
-    }.to raise_error(AgCalDAV::NotFoundError)
+    }.to raise_error(AgCalDAV::Errors::NotFoundError)
   end
 
   it "find one event" do

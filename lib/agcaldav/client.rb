@@ -48,12 +48,15 @@ module AgCalDAV
 
     def info
       req = AgCalDAV::Request.new(Net::HTTP::Propfind.new(@url), self)
+
       req.add_header(content_type: "application/xml")
-      response = req.run
+      req.add_body(AgCalDAV::XmlRequestBuilder::PROPFINDCalendar.new(properties: [:displayname, :sync_token, :getctag]).to_xml)
 
-      errorhandling response
+      res = req.run
 
-      xml = REXML::Document.new(response.body)
+      errorhandling res
+
+      xml = REXML::Document.new(res.body)
 
       {
         displayname: REXML::XPath.first(xml, "//d:displayname").text,
@@ -178,7 +181,7 @@ module AgCalDAV
 
     def manage_shares(data)
 
-        raise TypeNotSupported if data[:type] && data[:type] != :email
+        raise AgCalDAV::Errors::TypeNotSupportedError if data[:type] && data[:type] != :email
 
         req = AgCalDAV::Request.new(Net::HTTP::Post.new(@url), self)
         req.add_body(AgCalDAV::XmlRequestBuilder::PostSharing.new(
@@ -228,29 +231,18 @@ module AgCalDAV
     def  errorhandling response
       case response.code.to_i
       when 401
-        raise AuthenticationError
+        raise AgCalDAV::Errors::AuthenticationError
       when 404
-        raise NotFoundError
+        raise AgCalDAV::Errors::NotFoundError
       when 405
-        raise NotAllowedError
+        raise AgCalDAV::Errors::NotAllowedError
       when 410
-        raise NotExistError
+        raise AgCalDAV::Errors::NotExistError
       when 412
-        raise PreconditionFailed
+        raise AgCalDAV::Errors::PreconditionFailed
       when 500
-        raise APIError
+        raise AgCalDAV::Errors::APIError
       end
     end
   end
-
-  class AgCalDAVError < StandardError; end
-
-  class TypeNotSupported    < AgCalDAVError; end
-  class NotFoundError       < AgCalDAVError; end
-  class PreconditionFailed  < AgCalDAVError; end
-  class NotAllowedError     < AgCalDAVError; end
-  class AuthenticationError < AgCalDAVError; end
-  class DuplicateError      < AgCalDAVError; end
-  class APIError            < AgCalDAVError; end
-  class NotExistError       < AgCalDAVError; end
 end
