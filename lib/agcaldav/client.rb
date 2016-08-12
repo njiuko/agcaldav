@@ -91,8 +91,8 @@ module AgCalDAV
       end
     end
 
-    def delete_event uuid
-      res = AgCalDAV::Event.delete(self, uuid)
+    def delete_event uid
+      res = AgCalDAV::Event.delete(self, uid)
 
       if res.code.to_i.between?(200,299)
         true
