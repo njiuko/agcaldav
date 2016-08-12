@@ -27,15 +27,12 @@ module AgCalDAV
         req.run
       end
 
-      def share(client, data)
+      def share(client, adds: [], removes: [], summary: nil, common_name: nil,
+        privilege: "write-read")
         req = AgCalDAV::Request.new(:post, client)
 
         req.add_body(AgCalDAV::XmlRequestBuilder::PostSharing.new(
-          data[:adds],
-          data[:summary],
-          data[:common_name],
-          data[:privilege],
-          data[:removes]).to_xml)
+          adds, summary, common_name, privilege, removes).to_xml)
         req.add_header(content_length: "xxxx", content_type: "application/xml")
 
         req.run

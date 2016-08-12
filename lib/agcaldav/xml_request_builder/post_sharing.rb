@@ -4,12 +4,12 @@ module AgCalDAV
     class PostSharing < Base
       attr_accessor :adds, :removes, :summary, :privilege, :common_name
 
-      def initialize(adds = nil, summary = nil, common_name = nil, privilege = nil, removes = nil)
-        @adds = adds || []
+      def initialize(adds, summary, common_name, privilege, removes)
+        @adds = adds
         @summary = summary
         @privilege = privilege
         @common_name = common_name
-        @removes = removes || []
+        @removes = removes
         super()
       end
 

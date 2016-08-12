@@ -61,7 +61,7 @@ module AgCalDAV
     end
 
     def find_events(data)
-      res = AgCalDAV::Event.find_multiple(self, data)
+      res = AgCalDAV::Event.find_multiple(self, data[:starts], data[:ends])
 
       errorhandling res
       result = ""
@@ -78,9 +78,7 @@ module AgCalDAV
     end
 
     def find_event uid
-      req = AgCalDAV::Request.new(:get, self, path: "#{uid}.ics")
-      res = req.run
-
+      res = AgCalDAV::Event.find(self, uid)
       errorhandling res
       begin
         r = Icalendar::Calendar.parse(res.body)
@@ -125,9 +123,7 @@ module AgCalDAV
 
     def manage_shares(data)
         raise AgCalDAV::Errors::ShareeTypeNotSupportedError if data[:type] && data[:type] != :email
-
         res = AgCalDAV::Calendar.share(self, data)
-
         if res.code.to_i.between?(200,299)
           true
         else

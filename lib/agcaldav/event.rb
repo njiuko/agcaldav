@@ -3,7 +3,12 @@ module AgCalDAV
   class Event
     class << self
 
-      def find_multiple(client, starts: starts, ends: ends )
+      def find(client, uid)
+        req = AgCalDAV::Request.new(:get, client, path: "#{uid}.ics")
+        req.run
+      end
+
+      def find_multiple(client, starts, ends)
         events = []
         req = AgCalDAV::Request.new(:report, client)
 
@@ -16,7 +21,7 @@ module AgCalDAV
           req.add_body(AgCalDAV::XmlRequestBuilder::ReportVEVENT.new(Time.parse(starts).utc.strftime("%Y%m%dT%H%M%S"),
                                                         Time.parse(ends).utc.strftime("%Y%m%dT%H%M%S") ).to_xml)
         end
-        
+
         req.run
       end
 
