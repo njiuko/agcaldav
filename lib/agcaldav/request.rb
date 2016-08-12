@@ -61,7 +61,7 @@ module AgCalDAV
       when :mkcalendar
         Net::HTTP::Mkcalendar.new(path)
       else
-        raise HTTPMethodNotSupportedError, method
+        raise AgCalDAV::Errors::HTTPMethodNotSupportedError, method
       end
     end
 
