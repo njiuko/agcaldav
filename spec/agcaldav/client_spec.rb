@@ -40,7 +40,7 @@ describe AgCalDAV::Client do
       allow(SecureRandom).to receive(:uuid).and_return(uid)
       FakeWeb.register_uri(:put, %r{http://user@localhost:5232/user/calendar/#{uid}.ics}, {etag: etag, status: ["201", "OK"]})
 
-      r = @c.set_event(:start => "2012-12-29 10:00", :end => "2012-12-30 12:00", :title => "12345", :description => "12345 12345")
+      r = @c.create_update_event(:starts => "2012-12-29 10:00", :ends => "2012-12-30 12:00", :title => "12345", :description => "12345 12345")
       expect(r).to eq etag
     end
 
@@ -48,7 +48,7 @@ describe AgCalDAV::Client do
       new_etag = "124"
       FakeWeb.register_uri(:put, "http://user@localhost:5232/user/calendar/#{uid}.ics", {status: ["200", "OK"], etag: new_etag})
 
-      r = @c.set_event(:start => "2012-12-29 10:00", :end => "2012-12-30 12:00", :title => "Updated", :description => "12345 12345", etag: etag, uid: uid )
+      r = @c.create_update_event(:starts => "2012-12-29 10:00", :ends => "2012-12-30 12:00", :title => "Updated", :description => "12345 12345", etag: etag, uid: uid )
       expect(r).not_to eq etag
     end
   end
@@ -96,7 +96,7 @@ describe AgCalDAV::Client do
 
   it "find 2 events" do
     FakeWeb.register_uri(:report, "http://user@localhost:5232/user/calendar/", body: File.open('spec/fixtures/report.xml'))
-    r = @c.find_events(start: "2001-02-02 07:00", end: "2000-02-03 23:59")
+    r = @c.find_events(starts: "2001-02-02 07:00", ends: "2000-02-03 23:59")
     expect(r).to be
     expect(r.length).to eq 2
   end
