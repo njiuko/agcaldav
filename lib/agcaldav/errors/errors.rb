@@ -1,5 +1,23 @@
 module AgCalDAV
   module Errors
+
+    def  self.errorhandling response
+      case response.code.to_i
+      when 401
+        raise AgCalDAV::Errors::AuthenticationError
+      when 404
+        raise AgCalDAV::Errors::NotFoundError
+      when 405
+        raise AgCalDAV::Errors::NotAllowedError
+      when 410
+        raise AgCalDAV::Errors::NotExistError
+      when 412
+        raise AgCalDAV::Errors::PreconditionFailed
+      when 500
+        raise AgCalDAV::Errors::APIError
+      end
+    end
+
     class AgCalDAVError < StandardError; end
 
     class PropertyNotSupportedError   < AgCalDAVError; end
@@ -16,4 +34,3 @@ module AgCalDAV
     class NotExistError       < APIError; end
   end
 end
-

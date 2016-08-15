@@ -2,11 +2,11 @@ require 'spec_helper'
 
 describe AgCalDAV::Client do
   before(:each) do
-    @c = AgCalDAV::Client.new(:uri => "http://localhost:5232/user/calendar", :user => "user" , :password => "")
+    @c = AgCalDAV::Calendar.new(:uri => "http://localhost:5232/user/calendar", :user => "user" , :password => "")
   end
 
   it "check Class of new calendar" do
-    expect(@c.class.to_s).to eq("AgCalDAV::Client")
+    expect(@c).to be_a(AgCalDAV::Calendar)
   end
 
   describe "calendar" do
@@ -15,18 +15,18 @@ describe AgCalDAV::Client do
       FakeWeb.register_uri(:mkcalendar, %r{http://user@localhost:5232/user/calendar}, status: ["201", "Created"])
       FakeWeb.register_uri(:propfind, %r{http://user@localhost:5232/user/calendar}, status: ["200", "ok"], body: File.open("spec/fixtures/calendar_info.xml"))
 
-      r = @c.create_calendar(displayname: "Test Calendar")
+      r = @c.create(displayname: "Test Calendar")
       expect(r).to be
     end
 
     it "delete calendar" do
       FakeWeb.register_uri(:delete, "http://user@localhost:5232/user/calendar/",
                                     [{status: ["204", "No Content"]}, {status: ["404", "Not Found"]}])
-      r = @c.delete_calendar
+      r = @c.delete
       expect(r).to be (true)
 
       expect {
-        @c.delete_calendar
+        @c.delete
       }.to raise_error(AgCalDAV::Errors::NotFoundError)
     end
   end
@@ -40,7 +40,7 @@ describe AgCalDAV::Client do
       allow(SecureRandom).to receive(:uuid).and_return(uid)
       FakeWeb.register_uri(:put, %r{http://user@localhost:5232/user/calendar/#{uid}.ics}, {etag: etag, status: ["201", "OK"]})
 
-      r = @c.create_update_event(:starts => "2012-12-29 10:00", :ends => "2012-12-30 12:00", :title => "12345", :description => "12345 12345")
+      r = @c.events.create_update(:starts => "2012-12-29 10:00", :ends => "2012-12-30 12:00", :title => "12345", :description => "12345 12345")
       expect(r).to eq etag
     end
 
@@ -48,7 +48,7 @@ describe AgCalDAV::Client do
       new_etag = "124"
       FakeWeb.register_uri(:put, "http://user@localhost:5232/user/calendar/#{uid}.ics", {status: ["200", "OK"], etag: new_etag})
 
-      r = @c.create_update_event(:starts => "2012-12-29 10:00", :ends => "2012-12-30 12:00", :title => "Updated", :description => "12345 12345", etag: etag, uid: uid )
+      r = @c.events.create_update(:starts => "2012-12-29 10:00", :ends => "2012-12-30 12:00", :title => "Updated", :description => "12345 12345", etag: etag, uid: uid )
       expect(r).not_to eq etag
     end
   end
@@ -58,14 +58,14 @@ describe AgCalDAV::Client do
                                                                              {status: ["200", "OK"]}])
     it "is type email" do
       type = :email
-      r = @c.manage_shares adds: ["test@test.de"], privilege: "write-read"
+      r = @c.share adds: ["test@test.de"], privilege: "write-read"
       expect(r).to be(true)
     end
 
     it "is not type email" do
       type = :other
       expect {
-        @c.manage_shares adds: ["test@test.de"], privilege: "write-read", type: type
+        @c.share adds: ["test@test.de"], privilege: "write-read", type: type
       }.to raise_error(AgCalDAV::Errors::ShareeTypeNotSupportedError)
     end
 
@@ -79,24 +79,24 @@ describe AgCalDAV::Client do
     FakeWeb.register_uri(:delete, %r{http://user@localhost:5232/user/calendar/(.*).ics},
                          [{:body => "1 deleted.", :status => ["200", "OK"]},
                           {:body => "not found",  :status => ["404", "Not Found"]}])
-    r = @c.delete_event(uid)
+    r = @c.events.delete(uid)
     expect(r).to be(true)
     expect {
-      @c.delete_event(uid)
+      @c.events.delete(uid)
     }.to raise_error(AgCalDAV::Errors::NotFoundError)
   end
 
   it "find one event" do
     uid = "5385e2d0-3707-0130-9e49-001999638982"
     FakeWeb.register_uri(:get, "http://user@localhost:5232/user/calendar/#{uid}.ics", :body => "BEGIN:VCALENDAR\nPRODID:-//Radicale//NONSGML Radicale Server//EN\nVERSION:2.0\nBEGIN:VEVENT\nDESCRIPTION:12345 12ss345\nDTEND:20130101T110000\nDTSTAMP:20130101T161708\nDTSTART:20130101T100000\nSEQUENCE:0\nSUMMARY:123ss45\nUID:#{uid}\nX-RADICALE-NAME:#{uid}.ics\nEND:VEVENT\nEND:VCALENDAR")
-     r = @c.find_event(uid)
+     r = @c.events.find(uid)
      expect(r).to be
      expect(r.uid).to eq(uid)
   end
 
   it "find 2 events" do
     FakeWeb.register_uri(:report, "http://user@localhost:5232/user/calendar/", body: File.open('spec/fixtures/report.xml'))
-    r = @c.find_events(starts: "2001-02-02 07:00", ends: "2000-02-03 23:59")
+    r = @c.events.find_multiple(starts: "2001-02-02 07:00", ends: "2000-02-03 23:59")
     expect(r).to be
     expect(r.length).to eq 2
   end

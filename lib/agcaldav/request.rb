@@ -3,7 +3,7 @@ module AgCalDAV
     attr_accessor :path
     attr_reader :client, :request, :http
 
-    def initialize(method, client, path: "")
+    def initialize(method, client, path)
       @client  = client
       @path    = "#{client.base_path}/#{path}"
       @http    = build_http
