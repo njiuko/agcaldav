@@ -7,7 +7,7 @@ RSpec.describe AgCalDAV::Request do
     let!(:request) { AgCalDAV::Request.new(:get, client) }
 
     it "tests supported http methods" do
-      methods = [:put, :get, :post, :mkcalendar, :propfind, :report, :delete]
+      methods = [:put, :get, :post, :mkcalendar, :propfind, :report, :delete, :mkcol]
       methods.each do |method|
         res = AgCalDAV::Request.new(method, client)
         expect(res).to be_a AgCalDAV::Request
@@ -50,5 +50,5 @@ RSpec.describe AgCalDAV::Request do
       expect(request.request.body).to eq body
     end
   end
-  
+
 end

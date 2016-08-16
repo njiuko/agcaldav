@@ -60,6 +60,8 @@ module AgCalDAV
         Net::HTTP::Report.new(path)
       when :mkcalendar
         Net::HTTP::Mkcalendar.new(path)
+      when :mkcol
+        Net::HTTP::Mkcol.new(path)
       else
         raise AgCalDAV::Errors::HTTPMethodNotSupportedError, method
       end
