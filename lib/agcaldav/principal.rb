@@ -13,7 +13,6 @@ module AgCalDAV
       req.add_header(content_type: "text/xml", depth: "1")
 
       res = req.run
-      puts res.code
       if res.code.to_i.between?(200,299)
         true
       else
