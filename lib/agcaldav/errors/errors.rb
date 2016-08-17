@@ -28,7 +28,7 @@ module AgCalDAV
     class HTTPMethodNotSupportedError < AgCalDAVError; end
 
     class APIError            < AgCalDAVError; end
-    class ForbiddenError      < AgCalDAVError; end
+    class ForbiddenError      < APIError; end
     class NotFoundError       < APIError; end
     class PreconditionFailed  < APIError; end
     class NotAllowedError     < APIError; end
