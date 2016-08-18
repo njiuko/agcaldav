@@ -88,11 +88,12 @@ describe SabredavClient::Client do
   end
 
   it "find one event" do
+    uri = "5385e2d0-3707-0130-9e49-001999638982.ics"
     uid = "5385e2d0-3707-0130-9e49-001999638982"
-    FakeWeb.register_uri(:get, "http://user@localhost:5232/user/calendar/#{uid}.ics", :body => "BEGIN:VCALENDAR\nPRODID:-//Radicale//NONSGML Radicale Server//EN\nVERSION:2.0\nBEGIN:VEVENT\nDESCRIPTION:12345 12ss345\nDTEND:20130101T110000\nDTSTAMP:20130101T161708\nDTSTART:20130101T100000\nSEQUENCE:0\nSUMMARY:123ss45\nUID:#{uid}\nX-RADICALE-NAME:#{uid}.ics\nEND:VEVENT\nEND:VCALENDAR")
-     r = @c.events.find(uid)
+
+    FakeWeb.register_uri(:get, "http://user@localhost:5232/user/calendar/#{uri}", :body => "BEGIN:VCALENDAR\nPRODID:-//Radicale//NONSGML Radicale Server//EN\nVERSION:2.0\nBEGIN:VEVENT\nDESCRIPTION:12345 12ss345\nDTEND:20130101T110000\nDTSTAMP:20130101T161708\nDTSTART:20130101T100000\nSEQUENCE:0\nSUMMARY:123ss45\nUID:#{uid}\nX-RADICALE-NAME:#{uri}\nEND:VEVENT\nEND:VCALENDAR")
+     r = @c.events.find(uri)
      expect(r).to be
-     expect(r.uid).to eq(uid)
   end
 
   it "find 2 events" do

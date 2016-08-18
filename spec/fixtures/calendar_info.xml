@@ -6,6 +6,7 @@
       <d:prop>
         <d:displayname>Test Calendar</d:displayname>
         <cs:getctag>http://sabre.io/ns/sync/15</cs:getctag>
+        <d:sync-token>http://sabre.io/ns/sync/15</d:sync-token>
       </d:prop>
     <d:status>HTTP/1.1 200 OK</d:status>
     </d:propstat>

@@ -7,18 +7,12 @@ module SabredavClient
       @client = client
     end
 
-    def find(uid)
-      req = client.create_request(:get, path: "#{uid}.ics")
+    def find(uri)
+      req = client.create_request(:get, path: uri)
       res = req.run
 
       SabredavClient::Errors::errorhandling(res)
-      begin
-        r = Icalendar::Calendar.parse(res.body)
-      rescue
-        return false
-      else
-        r.first.events.first
-      end
+      res.body
     end
 
     def find_multiple(starts: "", ends: "")

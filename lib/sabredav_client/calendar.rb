@@ -21,10 +21,10 @@ module SabredavClient
       SabredavClient::Errors::errorhandling(res)
 
       xml = REXML::Document.new(res.body)
-
       {
         displayname: REXML::XPath.first(xml, "//d:displayname").text,
-        ctag: REXML::XPath.first(xml, "//cs:getctag").text
+        ctag: REXML::XPath.first(xml, "//cs:getctag").text,
+        sync_token: REXML::XPath.first(xml, "//d:sync-token").text
       }
     end
 
@@ -66,6 +66,40 @@ module SabredavClient
       else
         SabredavClient::Errors::errorhandling(res)
       end
+    end
+
+    def fetch_changes(sync_token)
+      req = client.create_request(:report)
+      req.add_body(SabredavClient::XmlRequestBuilder::ReportEventChanges.new(sync_token).to_xml)
+      req.add_header(content_type: "application/xml")
+
+      res = req.run
+
+      SabredavClient::Errors::errorhandling(res)
+
+      changes = []
+      deletions = []
+      xml = REXML::Document.new(res.body)
+
+      REXML::XPath.each(xml, "//d:response/", {"d"=> "DAV:"}) do
+        puts REXML::XPath.first(xml, "//d:status")
+
+        if (REXML::XPath.first(xml, "//d:status").text == "HTTP/1.1 404 Not Found")
+            deletions.push(REXML::XPath.first(xml, "//d:href").text)
+        else
+          changes.push(
+            {
+              uri: (REXML::XPath.first(xml, "//d:href").text).split("/").last,
+              etag: REXML::XPath.first(xml, "//d:getetag").text
+            })
+        end
+      end
+
+      {
+        changes: changes,
+        deletions: deletions,
+        sync_token: REXML::XPath.first(xml, "//d:sync-token").text
+      }
     end
   end
 end
