@@ -1,4 +1,4 @@
-module AgCalDAV
+module SabredavClient
   module XmlRequestBuilder
 
     C_NAMESPACES = {"xmlns:d" => 'DAV:', "xmlns:c" => "urn:ietf:params:xml:ns:caldav"}

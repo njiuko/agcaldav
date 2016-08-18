@@ -1,10 +1,10 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require File.expand_path('../lib/agcaldav/version', __FILE__)
+require File.expand_path('../lib/sabredav_client/version', __FILE__)
 
 Gem::Specification.new do |s|
-  s.name        = "agcaldav"
-  s.version     = AgCalDAV::VERSION
+  s.name        = "sabredav_client"
+  s.version     = SabredavClient::VERSION
   s.summary     = "Ruby CalDAV client"
   s.description = "yet another great Ruby client for CalDAV calendar and tasks."
 
@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
 
   s.license     = 'MIT'
 
-  s.homepage    = %q{https://github.com/agilastic/agcaldav}
+  s.homepage    = %q{https://github.com/njiuko/sabredav_client}
   s.authors     = [%q{Alex Ebeling-Hoppe}]
   s.email       = [%q{ebeling-hoppe@agilastic.de}]
 

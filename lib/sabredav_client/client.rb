@@ -1,4 +1,4 @@
-module AgCalDAV
+module SabredavClient
   class Client
     attr_reader :auth_type, :host, :port, :base_path, :user, :password, :ssl,
      :digest_auth, :duri, :proxy_host, :proxy_uri, :proxy_port
@@ -48,7 +48,7 @@ module AgCalDAV
     end
 
     def create_request(method, path: "")
-      request = AgCalDAV::Request.new(method, self, path)
+      request = SabredavClient::Request.new(method, self, path)
     end
   end
 end

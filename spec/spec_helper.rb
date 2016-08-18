@@ -1,6 +1,6 @@
 require 'rspec'
 require 'rubygems'
-require 'agcaldav'
+require 'sabredav_client'
 require 'fakeweb'
 
 RSpec.configure do |config|

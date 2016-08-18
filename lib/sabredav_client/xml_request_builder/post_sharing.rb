@@ -1,4 +1,4 @@
-module AgCalDAV
+module SabredavClient
   module XmlRequestBuilder
 
     class PostSharing < Base

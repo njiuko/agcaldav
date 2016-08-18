@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe AgCalDAV::XmlRequestBuilder::PROPFINDCalendar do
+RSpec.describe SabredavClient::XmlRequestBuilder::PROPFINDCalendar do
   let(:propfind) { described_class.new(properties: [:displayname, :getctag, :sync_token]) }
 
   describe "#to_xml" do
@@ -16,10 +16,9 @@ RSpec.describe AgCalDAV::XmlRequestBuilder::PROPFINDCalendar do
       it "raises an error if the not supported properties are selected" do
         expect {
           propfind.to_xml
-        }.to raise_error(AgCalDAV::Errors::PropertyNotSupportedError)
+        }.to raise_error(SabredavClient::Errors::PropertyNotSupportedError)
       end
 
     end
   end
 end
-

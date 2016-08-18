@@ -1,4 +1,4 @@
-module AgCalDAV
+module SabredavClient
   class Request
     attr_accessor :path
     attr_reader :client, :request, :http
@@ -63,7 +63,7 @@ module AgCalDAV
       when :mkcol
         Net::HTTP::Mkcol.new(path)
       else
-        raise AgCalDAV::Errors::HTTPMethodNotSupportedError, method
+        raise SabredavClient::Errors::HTTPMethodNotSupportedError, method
       end
     end
 

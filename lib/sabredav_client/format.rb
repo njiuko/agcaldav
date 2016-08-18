@@ -1,4 +1,4 @@
-module AgCalDAV
+module SabredavClient
   module Format
     class Raw
       def method_missing(m, *args, &block)
@@ -42,7 +42,7 @@ module AgCalDAV
       end
 
       def parse_events( vcal )
-        Icalendar.parse(vcal)        
+        Icalendar.parse(vcal)
       end
 
       def parse_single( body )

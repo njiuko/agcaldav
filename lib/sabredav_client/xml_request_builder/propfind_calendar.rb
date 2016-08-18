@@ -1,4 +1,4 @@
-module AgCalDAV
+module SabredavClient
   module XmlRequestBuilder
     class PROPFINDCalendar < Base
       attr_reader :properties
@@ -24,7 +24,7 @@ module AgCalDAV
 
       def build_properties
         properties.each do |property|
-          raise AgCalDAV::Errors::PropertyNotSupportedError, "Known properties are #{PROPERTIES}" unless PROPERTIES.keys.include?(property)
+          raise SabredavClient::Errors::PropertyNotSupportedError, "Known properties are #{PROPERTIES}" unless PROPERTIES.keys.include?(property)
 
           readable_property = property.to_s.gsub('_', '-').to_sym
 
@@ -39,4 +39,3 @@ module AgCalDAV
     end
   end
 end
-

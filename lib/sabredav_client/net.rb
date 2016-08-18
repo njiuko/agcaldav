@@ -13,4 +13,3 @@ module Net
         end
     end
 end
-

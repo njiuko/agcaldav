@@ -1,6 +1,6 @@
-module AgCalDAV
+module SabredavClient
   module XmlRequestBuilder
-    
+
     class MkcolPrincipal < Base
       attr_accessor  :email, :displayname
 

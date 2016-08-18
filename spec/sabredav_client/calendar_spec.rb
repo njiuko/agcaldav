@@ -1,12 +1,12 @@
 require 'spec_helper'
 
-describe AgCalDAV::Client do
+describe SabredavClient::Client do
   before(:each) do
-    @c = AgCalDAV::Calendar.new(:uri => "http://localhost:5232/user/calendar", :user => "user" , :password => "")
+    @c = SabredavClient::Calendar.new(:uri => "http://localhost:5232/user/calendar", :user => "user" , :password => "")
   end
 
   it "check Class of new calendar" do
-    expect(@c).to be_a(AgCalDAV::Calendar)
+    expect(@c).to be_a(SabredavClient::Calendar)
   end
 
   describe "calendar" do
@@ -27,7 +27,7 @@ describe AgCalDAV::Client do
 
       expect {
         @c.delete
-      }.to raise_error(AgCalDAV::Errors::NotFoundError)
+      }.to raise_error(SabredavClient::Errors::NotFoundError)
     end
   end
 
@@ -53,7 +53,7 @@ describe AgCalDAV::Client do
     end
   end
 
-  describe "manage_shares" do
+  describe "shares" do
     FakeWeb.register_uri(:post, "http://user@localhost:5232/user/calendar/", [{status: ["200", "OK"]},
                                                                              {status: ["200", "OK"]}])
     it "is type email" do
@@ -66,12 +66,12 @@ describe AgCalDAV::Client do
       type = :other
       expect {
         @c.share adds: ["test@test.de"], privilege: "write-read", type: type
-      }.to raise_error(AgCalDAV::Errors::ShareeTypeNotSupportedError)
+      }.to raise_error(SabredavClient::Errors::ShareeTypeNotSupportedError)
     end
 
     it "add one share" do
-      r = @c.manage_shares adds: ["test@test.de"], privilege: "write-read"
-      expect(r).to be(true) 
+      r = @c.share adds: ["test@test.de"], privilege: "write-read"
+      expect(r).to be(true)
     end
   end
 
@@ -84,7 +84,7 @@ describe AgCalDAV::Client do
     expect(r).to be(true)
     expect {
       @c.events.delete(uid)
-    }.to raise_error(AgCalDAV::Errors::NotFoundError)
+    }.to raise_error(SabredavClient::Errors::NotFoundError)
   end
 
   it "find one event" do

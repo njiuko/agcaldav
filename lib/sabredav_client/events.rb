@@ -1,4 +1,4 @@
-module AgCalDAV
+module SabredavClient
 
   class Events
     attr_accessor :client
@@ -11,7 +11,7 @@ module AgCalDAV
       req = client.create_request(:get, path: "#{uid}.ics")
       res = req.run
 
-      AgCalDAV::Errors::errorhandling(res)
+      SabredavClient::Errors::errorhandling(res)
       begin
         r = Icalendar::Calendar.parse(res.body)
       rescue
@@ -26,16 +26,16 @@ module AgCalDAV
       req = client.create_request(:report)
       req.add_header(depth: "1", content_type: "application/xml")
       if starts.is_a? Integer
-        req.add_body(AgCalDAV::XmlRequestBuilder::ReportVEVENT.new(Time.at(starts).utc.strftime("%Y%m%dT%H%M%S"),
+        req.add_body(SabredavClient::XmlRequestBuilder::ReportVEVENT.new(Time.at(starts).utc.strftime("%Y%m%dT%H%M%S"),
                                                       Time.at(ends).utc.strftime("%Y%m%dT%H%M%S") ).to_xml)
       else
-        req.add_body(AgCalDAV::XmlRequestBuilder::ReportVEVENT.new(Time.parse(starts).utc.strftime("%Y%m%dT%H%M%S"),
+        req.add_body(SabredavClient::XmlRequestBuilder::ReportVEVENT.new(Time.parse(starts).utc.strftime("%Y%m%dT%H%M%S"),
                                                       Time.parse(ends).utc.strftime("%Y%m%dT%H%M%S") ).to_xml)
       end
 
       res = req.run
 
-      AgCalDAV::Errors::errorhandling(res)
+      SabredavClient::Errors::errorhandling(res)
       result = ""
 
       xml = REXML::Document.new(res.body)
@@ -57,7 +57,7 @@ module AgCalDAV
       if res.code.to_i.between?(200,299)
         true
       else
-        AgCalDAV::Errors::errorhandling(res)
+        SabredavClient::Errors::errorhandling(res)
       end
     end
 
@@ -94,7 +94,7 @@ module AgCalDAV
 
       res = req.run
 
-      AgCalDAV::Errors::errorhandling(res)
+      SabredavClient::Errors::errorhandling(res)
       res['etag']
     end
   end
