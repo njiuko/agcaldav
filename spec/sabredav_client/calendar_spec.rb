@@ -31,24 +31,24 @@ describe SabredavClient::Client do
     end
   end
 
-  describe "set_event" do
+  describe "create_update" do
     let(:uid) { UUID.new.generate }
     #let(:event) { "BEGIN:VCALENDAR\nPRODID:-//Radicale//NONSGML Radicale Server//EN\nVERSION:2.0\nBEGIN:VEVENT\nDESCRIPTION:12345 12ss345\nDTEND:20130101T110000\nDTSTAMP:20130101T161708\nDTSTART:20130101T100000\nSEQUENCE:0\nSUMMARY:123ss45\nUID:#{uid}\nX-RADICALE-NAME:#{uid}.ics\nEND:VEVENT\nEND:VCALENDAR" }
     let(:etag) { "123" }
+    let(:uri) { "event.ics" }
+    let(:event_ics) { File.open('spec/fixtures/event.ics') }
 
     it "create one event" do
       allow(SecureRandom).to receive(:uuid).and_return(uid)
-      FakeWeb.register_uri(:put, %r{http://user@localhost:5232/user/calendar/#{uid}.ics}, {etag: etag, status: ["201", "OK"]})
-
-      r = @c.events.create_update(:starts => "2012-12-29 10:00", :ends => "2012-12-30 12:00", :title => "12345", :description => "12345 12345")
+      FakeWeb.register_uri(:put, %r{http://user@localhost:5232/user/calendar/#{uri}}, {etag: etag, status: ["201", "OK"]})
+      r = @c.events.create_update(uri, event_ics.to_s)
       expect(r).to eq etag
     end
 
     it "update one event" do
       new_etag = "124"
-      FakeWeb.register_uri(:put, "http://user@localhost:5232/user/calendar/#{uid}.ics", {status: ["200", "OK"], etag: new_etag})
-
-      r = @c.events.create_update(:starts => "2012-12-29 10:00", :ends => "2012-12-30 12:00", :title => "Updated", :description => "12345 12345", etag: etag, uid: uid )
+      FakeWeb.register_uri(:put, "http://user@localhost:5232/user/calendar/#{uri}", {status: ["200", "OK"], etag: new_etag})
+      r = @c.events.create_update(uri, event_ics.to_s, etag )
       expect(r).not_to eq etag
     end
   end

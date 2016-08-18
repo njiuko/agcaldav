@@ -61,35 +61,13 @@ module SabredavClient
       end
     end
 
-    def create_update(data)
-      calendar = Icalendar::Calendar.new
-      event = calendar.event do |e|
-        e.dtstart      = DateTime.parse(data[:starts])
-        e.dtend        = DateTime.parse(data[:ends])
-        e.categories   = data[:categories]
-        e.contact      = data[:contact]
-        e.attendee     = data[:attendee]
-        e.duration     = data[:duration]
-        e.summary      = data[:title]
-        e.description  = data[:description]
-        e.transp       = data[:accessibility] #PUBLIC, PRIVATE, CONFIDENTIAL
-        e.location     = data[:location]
-        e.geo          = data[:geo_location]
-        e.status       = data[:status]
-        e.url          = data[:url]
+    def create_update(uri, event_ics, etag = nil)
 
-        if data[:uid]
-          e.uid = data[:uid]
-        end
-      end
-
-      calendar_ical = calendar.to_ical
-
-      req = client.create_request(:put, path: "#{event.uid}.ics")
+      req = client.create_request(:put, path: uri)
       req.add_header(content_type: "text/calendar")
-      req.add_body(calendar_ical)
-      if data[:etag]
-        req.add_header(if_match: %Q/"#{data[:etag].gsub(/\A['"]+|['"]+\Z/, "")}"/)
+      req.add_body(event_ics)
+      if etag
+        req.add_header(if_match: %Q/"#{etag.gsub(/\A['"]+|['"]+\Z/, "")}"/)
       end
 
       res = req.run

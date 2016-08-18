@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    agcaldav (0.2.6.0)
+    sabredav_client (0.2.6.0)
       builder (~> 3.2)
       icalendar (~> 2.4)
       net-http-digest_auth (~> 1.4)
@@ -38,9 +38,9 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  agcaldav!
   fakeweb (~> 1.3)
   rspec (~> 3.5)
+  sabredav_client!
 
 BUNDLED WITH
-   1.11.2
+   1.12.5

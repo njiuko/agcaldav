@@ -58,7 +58,7 @@ module SabredavClient
       req.add_header(content_length: "xxxx", content_type: "application/xml")
 
       res = req.run
-
+      puts res.body
       raise SabredavClient::Errors::ShareeTypeNotSupportedError if type && type != :email
 
       if res.code.to_i.between?(200,299)
