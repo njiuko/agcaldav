@@ -35,7 +35,6 @@ describe SabredavClient::Client do
     body   = "xml_file"
     header = {content_type: "application/xml"}
     res = client.create_request(method, header: header, body: body)
-    puts res.request.to_hash
     expect(res.request.body).to eq(body)
     expect(res.request.to_hash).to include("content-type" => ["application/xml"])
     end
