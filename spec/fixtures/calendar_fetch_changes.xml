@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<d:multistatus xmlns:d="DAV:">
+    <d:response>
+        <d:href>/calendars/johndoe/home/newevent.ics</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:getetag>"1"</d:getetag>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>/calendars/johndoe/home/updatedevent.ics</d:href>
+        <d:propstat>
+            <d:prop>
+                <d:getetag>"2"</d:getetag>
+            </d:prop>
+            <d:status>HTTP/1.1 200 OK</d:status>
+        </d:propstat>
+    </d:response>
+    <d:response>
+        <d:href>/calendars/johndoe/home/deletedevent.ics</d:href>
+        <d:status>HTTP/1.1 404 Not Found</d:status>
+    </d:response>
+    <d:sync-token>http://sabredav.org/ns/sync/5001</d:sync-token>
+ </d:multistatus>

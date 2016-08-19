@@ -16,17 +16,18 @@ module SabredavClient
     end
 
     def find_multiple(starts: "", ends: "")
-      events = []
-      req = client.create_request(:report)
-      req.add_header(depth: "1", content_type: "application/xml")
+      events  = []
+      header  = {depth: "1", content_type: "application/xml"}
+
       if starts.is_a? Integer
-        req.add_body(SabredavClient::XmlRequestBuilder::ReportVEVENT.new(Time.at(starts).utc.strftime("%Y%m%dT%H%M%S"),
-                                                      Time.at(ends).utc.strftime("%Y%m%dT%H%M%S") ).to_xml)
+        body = SabredavClient::XmlRequestBuilder::ReportVEVENT.new(Time.at(starts).utc.strftime("%Y%m%dT%H%M%S"),
+                                                      Time.at(ends).utc.strftime("%Y%m%dT%H%M%S") ).to_xml
       else
-        req.add_body(SabredavClient::XmlRequestBuilder::ReportVEVENT.new(Time.parse(starts).utc.strftime("%Y%m%dT%H%M%S"),
-                                                      Time.parse(ends).utc.strftime("%Y%m%dT%H%M%S") ).to_xml)
+        body = SabredavClient::XmlRequestBuilder::ReportVEVENT.new(Time.parse(starts).utc.strftime("%Y%m%dT%H%M%S"),
+                                                      Time.parse(ends).utc.strftime("%Y%m%dT%H%M%S") ).to_xml
       end
 
+      req = client.create_request(:report, header: header)
       res = req.run
 
       SabredavClient::Errors::errorhandling(res)
@@ -43,9 +44,8 @@ module SabredavClient
       end
     end
 
-    def delete(uuid)
-      req = client.create_request(:delete, path: "#{uuid}.ics")
-
+    def delete(uri)
+      req = client.create_request(:delete, path: uri)
       res = req.run
 
       if res.code.to_i.between?(200,299)
@@ -56,14 +56,14 @@ module SabredavClient
     end
 
     def create_update(uri, event_ics, etag = nil)
+      header  = {content_type: "text/calendar"}
+      body    = event_ics
 
-      req = client.create_request(:put, path: uri)
-      req.add_header(content_type: "text/calendar")
-      req.add_body(event_ics)
       if etag
-        req.add_header(if_match: %Q/"#{etag.gsub(/\A['"]+|['"]+\Z/, "")}"/)
+        header[:if_match] = %Q/"#{etag.gsub(/\A['"]+|['"]+\Z/, "")}"/
       end
 
+      req = client.create_request(:put,header: header, body: body, path: uri)
       res = req.run
 
       SabredavClient::Errors::errorhandling(res)

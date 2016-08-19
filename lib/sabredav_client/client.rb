@@ -47,8 +47,11 @@ module SabredavClient
       end
     end
 
-    def create_request(method, path: "")
+    def create_request(method, header: {}, body: "", path: "")
       request = SabredavClient::Request.new(method, self, path)
+      request.add_header(header)  unless header.empty?
+      request.add_body(body)      unless body.empty?
+      request
     end
   end
 end

@@ -8,9 +8,9 @@ module SabredavClient
     end
 
     def create(email, displayname = nil)
-      req = client.create_request(:mkcol)
-      req.add_body(SabredavClient::XmlRequestBuilder::MkcolPrincipal.new(email, displayname).to_xml)
-      req.add_header(content_type: "text/xml", depth: "1")
+      header  = {content_type: "text/xml", depth: "1"}
+      body    = SabredavClient::XmlRequestBuilder::MkcolPrincipal.new(email, displayname).to_xml
+      req = client.create_request(:mkcol, header: header, body: body)
 
       res = req.run
       if res.code.to_i.between?(200,299)
@@ -31,5 +31,6 @@ module SabredavClient
         SabredavClient::Errors::errorhandling(res)
       end
     end
+
   end
 end

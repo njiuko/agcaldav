@@ -12,10 +12,10 @@ module SabredavClient
     end
 
     def info
-      req = client.create_request(:propfind)
-      req.add_header(content_type: "application/xml")
-      req.add_body(SabredavClient::XmlRequestBuilder::PROPFINDCalendar.new(properties: [:displayname, :sync_token, :getctag]).to_xml)
+      header  = {content_type: "application/xml"}
+      body    = SabredavClient::XmlRequestBuilder::PROPFINDCalendar.new(properties: [:displayname, :sync_token, :getctag]).to_xml
 
+      req = client.create_request(:propfind, header: header, body: body)
       res = req.run
 
       SabredavClient::Errors::errorhandling(res)
@@ -29,9 +29,10 @@ module SabredavClient
     end
 
     def create(displayname: "", description: "")
-      req = client.create_request(:mkcalendar)
-      req.add_body(SabredavClient::XmlRequestBuilder::Mkcalendar.new(displayname, description).to_xml)
-      req.add_header(dav: "resource-must-be-null", content_type: "application/xml")
+      body    = SabredavClient::XmlRequestBuilder::Mkcalendar.new(displayname, description).to_xml
+      header  = {dav: "resource-must-be-null", content_type: "application/xml"}
+
+      req = client.create_request(:mkcalendar, header: header, body: body)
 
       res = req.run
 
@@ -52,13 +53,15 @@ module SabredavClient
 
     def share(adds: [], removes: [], summary: nil, common_name: nil,
       privilege: "write-read", type: nil)
-      req = client.create_request(:post)
-      req.add_body(SabredavClient::XmlRequestBuilder::PostSharing.new(
-        adds, summary, common_name, privilege, removes).to_xml)
-      req.add_header(content_length: "xxxx", content_type: "application/xml")
+
+      header  = {content_length: "xxxx", content_type: "application/xml"}
+      body    = SabredavClient::XmlRequestBuilder::PostSharing.new(
+        adds, summary, common_name, privilege, removes).to_xml
+
+      req = client.create_request(:post, header: header, body: body)
 
       res = req.run
-      puts res.body
+
       raise SabredavClient::Errors::ShareeTypeNotSupportedError if type && type != :email
 
       if res.code.to_i.between?(200,299)
@@ -69,28 +72,30 @@ module SabredavClient
     end
 
     def fetch_changes(sync_token)
-      req = client.create_request(:report)
-      req.add_body(SabredavClient::XmlRequestBuilder::ReportEventChanges.new(sync_token).to_xml)
-      req.add_header(content_type: "application/xml")
 
-      res = req.run
+      body    = SabredavClient::XmlRequestBuilder::ReportEventChanges.new(sync_token).to_xml
+      header  = {content_type: "application/xml"}
+
+      req     = client.create_request(:report, header: header, body: body)
+      res     = req.run
 
       SabredavClient::Errors::errorhandling(res)
 
-      changes = []
+      changes   = []
       deletions = []
       xml = REXML::Document.new(res.body)
 
-      REXML::XPath.each(xml, "//d:response/", {"d"=> "DAV:"}) do
-        puts REXML::XPath.first(xml, "//d:status")
-
-        if (REXML::XPath.first(xml, "//d:status").text == "HTTP/1.1 404 Not Found")
-            deletions.push(REXML::XPath.first(xml, "//d:href").text)
+      #FIXME This is so damn ugly, but at least it`s working now
+      REXML::XPath.each(xml, "//d:response/", {"d"=> "DAV:"}) do |response|
+        entry = REXML::Document.new.add(response)
+        if (REXML::XPath.first(entry, "//d:status").text == "HTTP/1.1 404 Not Found")
+            deletions.push(
+              REXML::XPath.first(entry, "//d:href").text.to_s.split("/").last)
         else
           changes.push(
             {
-              uri: (REXML::XPath.first(xml, "//d:href").text).split("/").last,
-              etag: REXML::XPath.first(xml, "//d:getetag").text
+              uri:  REXML::XPath.first(entry, "//d:href").text.split("/").last,
+              etag: REXML::XPath.first(entry, "//d:getetag").text
             })
         end
       end
