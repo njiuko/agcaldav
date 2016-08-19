@@ -1,7 +1,7 @@
 module SabredavClient
   class Client
-    attr_reader :auth_type, :host, :port, :base_path, :user, :password, :ssl,
-     :digest_auth, :duri, :proxy_host, :proxy_uri, :proxy_port
+    attr_reader :authtype, :host, :port, :base_path, :user, :password, :ssl,
+     :digest_auth, :duri, :proxy_host, :proxy_uri, :proxy_port, :base_path
 
     def format=(fmt)
       @format = fmt

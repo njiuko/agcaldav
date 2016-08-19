@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe SabredavClient::Client do
+describe SabredavClient::Calendar do
 
   let(:calendar) { SabredavClient::Calendar.new(:uri => "http://localhost:5232/user/calendar", :user => "user" , :password => "") }
 

@@ -68,7 +68,7 @@ module SabredavClient
     end
 
     def add_auth
-      unless client.auth_type == 'digest'
+      unless client.authtype == 'digest'
         request.basic_auth client.user, client.password
       else
         request.add_field 'Authorization', digestauth(method.to_s.upcase)

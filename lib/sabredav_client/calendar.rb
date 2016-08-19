@@ -77,6 +77,7 @@ module SabredavClient
       header  = {content_type: "application/xml"}
 
       req     = client.create_request(:report, header: header, body: body)
+
       res     = req.run
 
       SabredavClient::Errors::errorhandling(res)
