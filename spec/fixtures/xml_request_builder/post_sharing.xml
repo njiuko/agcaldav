@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cs:share xmlns:d="DAV:" xmlns:cs="http://calendarserver.org/ns/">
+  <cs:set>
+    <d:href>mailto:add1@test.de</d:href>
+    <cs:summary>title</cs:summary>
+    <cs:common-name>common_name</cs:common-name>
+    <cs:read-write/>
+  </cs:set>
+  <cs:set>
+    <d:href>mailto:add2@test.de</d:href>
+    <cs:summary>title</cs:summary>
+    <cs:common-name>common_name</cs:common-name>
+    <cs:read-write/>
+  </cs:set>
+  <cs:remove>
+    <d:href>mailto:remove@test.de</d:href>
+  </cs:remove>
+</cs:share>

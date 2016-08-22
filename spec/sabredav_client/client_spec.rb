@@ -31,12 +31,12 @@ describe SabredavClient::Client do
   describe "create_request" do
 
     it " with header and body" do
-    method = :report
-    body   = "xml_file"
-    header = {content_type: "application/xml"}
-    res = client.create_request(method, header: header, body: body)
-    expect(res.request.body).to eq(body)
-    expect(res.request.to_hash).to include("content-type" => ["application/xml"])
+      method = :report
+      body   = "xml_file"
+      header = {content_type: "application/xml"}
+      res = client.create_request(method, header: header, body: body)
+      expect(res.request.body).to eq(body)
+      expect(res.request.to_hash).to include("content-type" => ["application/xml"])
     end
   end
 end
