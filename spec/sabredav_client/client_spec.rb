@@ -8,7 +8,6 @@ describe SabredavClient::Client do
 
     it "no encryption and basic_auth" do
       #TODO
-
     end
 
     it "with ssl and basic authentification" do

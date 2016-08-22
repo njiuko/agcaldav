@@ -37,7 +37,7 @@ describe SabredavClient::Events do
     end
 
     it "two events" do
-      FakeWeb.register_uri(:report, "http://user@localhost:5232/user/calendar/", body: File.open('spec/fixtures/report.xml'))
+      FakeWeb.register_uri(:report, "http://user@localhost:5232/user/calendar/", body: File.open('spec/fixtures/events_find_multiple.xml'))
       r = events.find_multiple(starts: "2001-02-02 07:00", ends: "2000-02-03 23:59")
       expect(r.first).to be_a(Icalendar::Event)
       expect(r.length).to eq 2

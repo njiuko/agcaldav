@@ -2,7 +2,9 @@ require 'spec_helper'
 
 describe SabredavClient::XmlRequestBuilder::Base do
 
-  describe "constants" do
+  let(:base) { described_class.new() }
+
+  describe "module constants" do
 
     it "to be there" do
       NAMESPACE = {"xmlns:d" => 'DAV:'}
@@ -18,10 +20,9 @@ describe SabredavClient::XmlRequestBuilder::Base do
   end
 
   describe "initialization" do
-    base = SabredavClient::XmlRequestBuilder::Base.new
     indent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<kind_of?>Builder::XmlMarkup</kind_of?>\n<indent/>\n"
 
-    it "xml attribute is valid" do
+    it "xml indent is correct" do
       expect(base.xml).to be_a Builder::XmlMarkup
       expect(base.xml.indent).to eq indent
     end
