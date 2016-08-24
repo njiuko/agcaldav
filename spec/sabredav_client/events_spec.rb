@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe SabredavClient::Events do
   client = SabredavClient::Client.new(uri: "http://localhost:5232/user/calendar", user: "user", password: "")
-  let!(:events) { SabredavClient::Events.new(client) }
+  let!(:events) { described_class.new(client = client) }
 
   describe "initialization" do
 
@@ -61,5 +61,26 @@ describe SabredavClient::Events do
       r = events.create_update(uri, event_ics.to_s, etag )
       expect(r).not_to eq etag
     end
+  end
+
+  describe "owner" do
+    uri = "event.ics"
+
+    it "find" do
+      owner = "principals/usertest"
+      FakeWeb.register_uri(:propfind, "http://user@localhost:5232/user/calendar/#{uri}", {status: ["200", "OK"], body: File.open("spec/fixtures/events_owner.xml") })
+      r = events.owner(uri)
+
+      expect(r).to eq(owner)
+    end
+
+    it "update" do
+
+      FakeWeb.register_uri(:proppatch, "http://user@localhost:5232/user/calendar/#{uri}", {status: ["200", "OK"]})
+      r = events.update_owner(uri, "principals/usertest")
+
+      expect(r).to be
+    end
+
   end
 end

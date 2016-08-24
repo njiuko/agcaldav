@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:cal="urn:ietf:params:xml:ns:caldav" xmlns:cs="http://calendarserver.org/ns/">
+ <d:response>
+  <d:href>http://localhost:5232/user/calendar/event.ics</d:href>
+  <d:propstat>
+   <d:prop>
+    <d:objectOwner>principals/usertest</d:objectOwner>
+   </d:prop>
+   <d:status>HTTP/1.1 200 OK</d:status>
+  </d:propstat>
+ </d:response>
+</d:multistatus>
