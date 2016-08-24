@@ -44,6 +44,30 @@ module SabredavClient
       end
     end
 
+    def owner(uri)
+      header = {content_type: "application/xml"}
+      body = XmlRequestBuilder::PropfindOwner.new.to_xml
+      req = client.create_request(:propfind, path: uri, header: header, body: body)
+      res = req.run
+
+      SabredavClient::Errors::errorhandling(res)
+      xml = REXML::Document.new(res.body)
+      REXML::XPath.first(xml, "//d:objectOwner").text
+    end
+
+    def update_owner(uri, owner)
+      header = {content_type: "application/xml"}
+      body = XmlRequestBuilder::ProppatchOwner.new(owner).to_xml
+      req = client.create_request(:proppatch, path: uri, header: header, body: body)
+      res = req.run
+      puts res.body
+      if res.code.to_i.between?(200,299)
+        true
+      else
+        SabredavClient::Errors::errorhandling(res)
+      end
+    end
+
     def delete(uri)
       req = client.create_request(:delete, path: uri)
       res = req.run

@@ -8,7 +8,7 @@ RSpec.describe SabredavClient::Request do
     let!(:request) { SabredavClient::Request.new(:get, client, path) }
 
     it "tests supported http methods" do
-      methods = [:put, :get, :post, :mkcalendar, :propfind, :report, :delete, :mkcol]
+      methods = [:put, :get, :post, :mkcalendar, :propfind, :proppatch, :report, :delete, :mkcol]
       methods.each do |method|
         res = SabredavClient::Request.new(method, client, path)
         expect(res).to be_a SabredavClient::Request

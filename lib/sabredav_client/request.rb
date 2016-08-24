@@ -56,6 +56,8 @@ module SabredavClient
         Net::HTTP::Delete.new(path)
       when :propfind
         Net::HTTP::Propfind.new(path)
+      when :proppatch
+        Net::HTTP::Proppatch.new(path)
       when :report
         Net::HTTP::Report.new(path)
       when :mkcalendar
