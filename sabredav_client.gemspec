@@ -5,16 +5,16 @@ require File.expand_path('../lib/sabredav_client/version', __FILE__)
 Gem::Specification.new do |s|
   s.name        = "sabredav_client"
   s.version     = SabredavClient::VERSION
-  s.summary     = "Ruby CalDAV client"
-  s.description = "yet another great Ruby client for CalDAV calendar and tasks."
+  s.summary     = "Ruby SabreDAV client"
+  s.description = "A great Ruby client for SabreDAV Servers."
 
   s.required_ruby_version     = '>= 1.9.2'
 
   s.license     = 'MIT'
 
   s.homepage    = %q{https://github.com/njiuko/sabredav_client}
-  s.authors     = [%q{Alex Ebeling-Hoppe}]
-  s.email       = [%q{ebeling-hoppe@agilastic.de}]
+  s.authors     = [%q{Njiuko Gmbh}]
+  s.email       = [%q{hello@njiuko.com}]
 
   s.add_runtime_dependency 'icalendar', '~> 2.4'
   s.add_runtime_dependency 'uuid', '~> 2.3'
@@ -25,13 +25,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'fakeweb', '~> 1.3'
 
   s.description = <<-DESC
-  agcaldav is yet another great Ruby client for CalDAV calendar.  It is based on the icalendar gem.
+  sabredav_client is a great Ruby client for SabreDAV servers.  It is based on the agcaldav gem.
 DESC
-  s.post_install_message = <<-POSTINSTALL
-  Changelog: https://github.com/agilastic/agcaldav/blob/master/CHANGELOG.rdoc
-  Examples:  https://github.com/agilastic/agcaldav
-POSTINSTALL
-
 
   s.files         = `git ls-files`.split("\n")
   s.require_paths = ["lib"]

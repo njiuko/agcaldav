@@ -60,6 +60,7 @@ module SabredavClient
       body = XmlRequestBuilder::ProppatchOwner.new(owner).to_xml
       req = client.create_request(:proppatch, path: uri, header: header, body: body)
       res = req.run
+
       if res.code.to_i.between?(200,299)
         true
       else
