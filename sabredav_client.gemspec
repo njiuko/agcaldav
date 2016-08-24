@@ -13,8 +13,8 @@ Gem::Specification.new do |s|
   s.license     = 'MIT'
 
   s.homepage    = %q{https://github.com/njiuko/sabredav_client}
-  s.authors     = [%q{Njiuko Gmbh}]
-  s.email       = [%q{hello@njiuko.com}]
+  s.authors     = [%q{Nicolas Schwartau}]
+  s.email       = [%q{n.schwartau@gmail.com}]
 
   s.add_runtime_dependency 'icalendar', '~> 2.4'
   s.add_runtime_dependency 'uuid', '~> 2.3'
