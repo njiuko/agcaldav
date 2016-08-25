@@ -16,8 +16,6 @@ Gem::Specification.new do |s|
   s.authors     = [%q{Nicolas Schwartau}]
   s.email       = [%q{n.schwartau@gmail.com}]
 
-  s.add_runtime_dependency 'icalendar', '~> 2.4'
-  s.add_runtime_dependency 'uuid', '~> 2.3'
   s.add_runtime_dependency 'builder', '~> 3.2'
   s.add_runtime_dependency 'net-http-digest_auth', '~> 1.4'
 

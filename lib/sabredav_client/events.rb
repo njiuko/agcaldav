@@ -36,12 +36,7 @@ module SabredavClient
       xml = REXML::Document.new(res.body)
       REXML::XPath.each( xml, '//c:calendar-data/', {"c"=>"urn:ietf:params:xml:ns:caldav"} ){|c| result << c.text}
 
-      calendar = Icalendar::Calendar.parse(result).first
-      if calendar
-        calendar.events
-      else
-        false
-      end
+      result
     end
 
     def owner(uri)

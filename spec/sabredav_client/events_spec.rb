@@ -43,8 +43,10 @@ describe SabredavClient::Events do
       FakeWeb.register_uri(:report, "http://user@localhost:5232/user/calendar/", body: File.open('spec/fixtures/events_find_multiple.xml'))
       r = events.find_multiple(starts: "2001-02-02 07:00", ends: "2000-02-03 23:59")
 
-      expect(r.first).to be_a(Icalendar::Event)
-      expect(r.length).to eq 2
+      expect(r).to include("BEGIN:VCALENDAR")
+      expect(r).to include("UID:960232b0-371c-0130-9e6b-001999638982")
+      expect(r).to include("UID:98f067a0-371c-0130-9e6c-001999638982")
+      expect(r).to include("END:VCALENDAR")
     end
   end
 
