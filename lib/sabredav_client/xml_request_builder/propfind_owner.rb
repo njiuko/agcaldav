@@ -8,9 +8,9 @@ module SabredavClient
       end
 
       def to_xml
-        xml.d :propfind, NAMESPACE do
+        xml.d :propfind, CS_NAMESPACES do
           xml.d :prop do
-            xml.d :objectOwner
+            xml.cs :objectOwner
           end
         end
       end

@@ -4,7 +4,7 @@
   <d:href>http://localhost:5232/user/calendar/event.ics</d:href>
   <d:propstat>
    <d:prop>
-    <d:objectOwner>principals/usertest</d:objectOwner>
+    <cs:objectOwner>principals/usertest</cs:objectOwner>
    </d:prop>
    <d:status>HTTP/1.1 200 OK</d:status>
   </d:propstat>

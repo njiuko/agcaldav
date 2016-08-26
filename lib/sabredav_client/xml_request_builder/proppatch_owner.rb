@@ -10,10 +10,10 @@ module SabredavClient
       end
 
       def to_xml
-        xml.d :propertyupdate, NAMESPACE do
+        xml.d :propertyupdate, CS_NAMESPACES do
           xml.d :set do
             xml.d :prop do
-              xml.d :objectOwner, owner
+              xml.cs :objectOwner, owner
             end
           end
         end
