@@ -40,8 +40,8 @@ module SabredavClient
     end
 
     def owner(uri)
-      # Warning: this is not a standard request. It only works if your sabredav
-      # implementation is uses my OwnerPlugin
+      # Warning: This is not a standard request. It only works if your sabredav
+      # server uses a certain OwnerPlugin
       header = {content_type: "application/xml"}
       body = XmlRequestBuilder::PropfindOwner.new.to_xml
       req = client.create_request(:propfind, path: uri, header: header, body: body)
@@ -53,8 +53,8 @@ module SabredavClient
     end
 
     def update_owner(uri, owner)
-      # Warning this is not a standard request. It only works if your sabredav
-      # implementation is supporting my OwnerPlugin
+      # Warning: This is not a standard request. It only works if your sabredav
+      # server uses a certain OwnerPlugin
       header = {content_type: "application/xml"}
       body = XmlRequestBuilder::ProppatchOwner.new(owner).to_xml
       req = client.create_request(:proppatch, path: uri, header: header, body: body)

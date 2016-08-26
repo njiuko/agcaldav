@@ -71,6 +71,49 @@ module SabredavClient
       end
     end
 
+    def fetch_sharees
+      body    = SabredavClient::XmlRequestBuilder::PropfindInvite.new.to_xml
+      header  = {content_type: "application/xml", depth: "0"}
+
+      req     = client.create_request(:propfind, header: header, body: body)
+
+      res     = req.run
+
+      SabredavClient::Errors::errorhandling(res)
+
+      sharees   = []
+      xml       = REXML::Document.new(res.body)
+
+      REXML::XPath.each(xml, "//cs:user/", {"cs"=> "http://calendarserver.org/ns/"}) do |user|
+        entry = REXML::Document.new.add(user)
+        sharee = {
+          href:           REXML::XPath.first(entry, "//d:href").text,
+          common_name:    REXML::XPath.first(entry, "//d:common-name").text
+        }
+        access          = REXML::XPath.first(entry, "//d:access").elements[1].to_s
+        sharee[:access] = access.gsub(/\A[<cs:]+|[\/>]+\Z/, "")
+
+        # So far Sabredav accepts every invite by default
+        sharee[:status] = :accepted unless REXML::XPath.first(entry, "//cs:invite-accepted").nil?
+        # URI depends on a custom plugin
+        begin
+          sharee[:uri]  = REXML::XPath.first(entry, "//cs:uri").text
+        rescue
+          #sharee[:uri] = "Property not supported by SabreDAV server"
+        end
+        sharees.push(sharee)
+      end
+
+      {
+        sharees: sharees,
+        organizer: {
+                    href: REXML::XPath.first(xml, "//cs:organizer").elements[2].text,
+                    uri:  REXML::XPath.first(xml, "//cs:uri").text
+                  }
+      }
+
+    end
+
     def fetch_changes(sync_token)
 
       body    = SabredavClient::XmlRequestBuilder::ReportEventChanges.new(sync_token).to_xml

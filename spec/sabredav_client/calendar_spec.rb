@@ -52,7 +52,7 @@ describe SabredavClient::Calendar do
     end
   end
 
-  describe "shares" do
+  describe "sharing" do
     FakeWeb.register_uri(:post, "http://user@localhost:5232/user/calendar/", [{status: ["200", "OK"]},
                                                                              {status: ["200", "OK"]}])
     it "is type email" do
@@ -71,6 +71,19 @@ describe SabredavClient::Calendar do
     it "add one share" do
       r = calendar.share(adds: ["test@test.de"], privilege: "write-read")
       expect(r).to be(true)
+    end
+
+    it "fetch_sharees" do
+      FakeWeb.register_uri(:propfind, "http://user@localhost:5232/user/calendar/", body: File.open('spec/fixtures/calendar_sharees.xml') )
+
+      organizer = {href: "/caldav/server.php/principals/user", uri: "D8D498E2-4A98-4DC7-B421-BC49261168AF"}
+      sharees =
+        [{href: "mailto:sharee1@njiuko.com", common_name: "sharee1", access: "read", status: :accepted, uri: "5bffa09e-7220-4688-a13f-088714a98783"},
+          {href: "mailto:sharee2@protonet.info", common_name: "sharee2", access: "write-read", status: :accepted, uri: "f176b400-f0e4-4a57-bd92-0c307810ce12"}]
+      expected_result = {sharees: sharees, organizer: organizer}
+
+      r = calendar.fetch_sharees
+      expect(r).to eq(expected_result)
     end
   end
 
