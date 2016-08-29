@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<d:propertyupdate xmlns:d="DAV:" xmlns:sb="http://sabredav.org/ns">
+  <d:set>
+    <d:prop>
+      <sb:email-address>update@test.de</sb:email-address>
+      <d:displayname>David B.</d:displayname>
+    </d:prop>
+  </d:set>
+</d:propertyupdate>

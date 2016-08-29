@@ -97,8 +97,10 @@ module SabredavClient
         sharee[:status] = :accepted unless REXML::XPath.first(entry, "//cs:invite-accepted").nil?
         # URI depends on a custom plugin
         begin
-          sharee[:uri]  = REXML::XPath.first(entry, "//cs:uri").text
+          sharee[:uri]        = REXML::XPath.first(entry, "//cs:uri").text
+          sharee[:principal]  = REXML::XPath.first(entry, "//cs:principal").text
         rescue
+          #sharee[:uri] = "Property not supported by SabreDAV server"
           #sharee[:uri] = "Property not supported by SabreDAV server"
         end
         sharees.push(sharee)

@@ -10,7 +10,7 @@ module SabredavClient
     def create(email, displayname = nil)
       header  = {content_type: "text/xml", depth: "1"}
       body    = SabredavClient::XmlRequestBuilder::MkcolPrincipal.new(email, displayname).to_xml
-      req = client.create_request(:mkcol, header: header, body: body)
+      req     = client.create_request(:mkcol, header: header, body: body)
 
       res = req.run
       if res.code.to_i.between?(200,299)
@@ -18,6 +18,21 @@ module SabredavClient
       else
         SabredavClient::Errors::errorhandling(res)
       end
+    end
+
+    def update(email: "", displayname: "")
+      header  = {content_type: "application/xml"}
+      body    = SabredavClient::XmlRequestBuilder::ProppatchPrincipal.new(email, displayname).to_xml
+      req     = client.create_request(:proppatch, header: header, body: body)
+
+      res     = req.run
+
+      if res.code.to_i.between?(200,299)
+        true
+      else
+        SabredavClient::Errors::errorhandling(res)
+      end
+
     end
 
     def delete

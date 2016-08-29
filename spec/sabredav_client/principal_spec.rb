@@ -12,7 +12,7 @@ describe SabredavClient::Client do
     end
   end
 
-  describe "principal" do
+  describe "create" do
     email = "test@mail.de"
     description = "a random description"
 
@@ -33,6 +33,19 @@ describe SabredavClient::Client do
       expect {
         principal.create(email)
       }.to raise_error(SabredavClient::Errors::NotAllowedError)
+    end
+  end
+
+  describe "update" do
+
+    it "updates email and displayname" do
+      email       = "update@test.de"
+      displayname = "David B."
+      FakeWeb.register_uri(:proppatch, "http://user@localhost:5232/user/principals/user/", status: ["207", "OK"])
+
+      result = principal.update(email: email, displayname: displayname)
+      expect(result).to be
+
     end
   end
 end
