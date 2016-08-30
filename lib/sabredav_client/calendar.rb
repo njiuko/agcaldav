@@ -88,7 +88,6 @@ module SabredavClient
         entry = REXML::Document.new.add(user)
         sharee = {
           href:           REXML::XPath.first(entry, "//d:href").text,
-          common_name:    REXML::XPath.first(entry, "//d:common-name").text
         }
         access          = REXML::XPath.first(entry, "//d:access").elements[1].to_s
         sharee[:access] = access.gsub(/\A[<cs:]+|[\/>]+\Z/, "")
@@ -97,6 +96,7 @@ module SabredavClient
         sharee[:status] = :accepted unless REXML::XPath.first(entry, "//cs:invite-accepted").nil?
         # URI depends on a custom plugin
         begin
+          sharee[:common_name] = REXML::XPath.first(entry, "//d:common-name").text
           sharee[:uri]        = REXML::XPath.first(entry, "//cs:uri").text
           sharee[:principal]  = REXML::XPath.first(entry, "//cs:principal").text
         rescue
