@@ -40,6 +40,21 @@ module SabredavClient
       info
     end
 
+    def update(displayname: nil, description: nil)
+      body = XmlRequestBuilder::ProppatchCalendar.new(displayname, description).to_xml
+      header = {content_type: "application/xml"}
+
+      req = client.create_request(:proppatch, header: header, body: body)
+
+      res = req.run
+
+      if res.code.to_i.between?(200,299)
+        true
+      else
+        SabredavClient::Errors::errorhandling(res)
+      end
+    end
+
     def delete
       req = client.create_request(:delete)
       res = req.run

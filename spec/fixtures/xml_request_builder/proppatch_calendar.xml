@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<d:propertyupdate xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
+  <d:set>
+    <d:prop>
+      <d:displayname>name</d:displayname>
+      <c:calendar-description>description</c:calendar-description>
+    </d:prop>
+  </d:set>
+</d:propertyupdate>

@@ -40,6 +40,21 @@ describe SabredavClient::Calendar do
       expect(r[:sync_token]).to  eq(sync_token)
     end
 
+    it "update" do
+      description = "a example description"
+      displayname = "example discription"
+      body        = SabredavClient::XmlRequestBuilder::ProppatchCalendar.new(displayname, description).to_xml
+      header      = {content_type: "application/xml"}
+
+      FakeWeb.register_uri(:proppatch, "http://user@localhost:5232/user/calendar/", status: ["207", "Multi-Staus"])
+
+      expect(calendar.client).to receive(:create_request).with(:proppatch, header: header, body: body).and_call_original
+
+      r = calendar.update(displayname: displayname, description: description)
+      expect(r).to be
+
+    end
+
     it "delete" do
       FakeWeb.register_uri(:delete, "http://user@localhost:5232/user/calendar/",
                                     [{status: ["204", "No Content"]}, {status: ["404", "Not Found"]}])

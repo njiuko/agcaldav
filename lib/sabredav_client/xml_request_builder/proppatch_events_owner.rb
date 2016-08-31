@@ -1,7 +1,7 @@
 module SabredavClient
   module XmlRequestBuilder
 
-    class ProppatchOwner < Base
+    class ProppatchEventsOwner < Base
       attr_accessor :owner
 
       def initialize(owner)

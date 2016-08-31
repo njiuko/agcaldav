@@ -56,7 +56,7 @@ module SabredavClient
       # Warning: This is not a standard request. It only works if your sabredav
       # server uses a certain OwnerPlugin
       header = {content_type: "application/xml"}
-      body = XmlRequestBuilder::ProppatchOwner.new(owner).to_xml
+      body = XmlRequestBuilder::ProppatchEventsOwner.new(owner).to_xml
       req = client.create_request(:proppatch, path: uri, header: header, body: body)
       res = req.run
 
@@ -68,7 +68,7 @@ module SabredavClient
     end
 
     def delete(uri)
-      raise SabredavClient::Errors::SabredavClientError if uri.nil? || !uri.end_with?(".ics")  
+      raise SabredavClient::Errors::SabredavClientError if uri.nil? || !uri.end_with?(".ics")
 
       req = client.create_request(:delete, path: uri)
       res = req.run

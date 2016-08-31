@@ -3,6 +3,8 @@ module SabredavClient
 
     def  self.errorhandling response
       case response.code.to_i
+      when 400
+        raise SabredavClient::Errors::BadRequestError
       when 401
         raise SabredavClient::Errors::AuthenticationError
       when 403
@@ -32,6 +34,7 @@ module SabredavClient
     class NotFoundError       < APIError; end
     class PreconditionFailed  < APIError; end
     class NotAllowedError     < APIError; end
+    class BadRequestError     < APIError; end
     class AuthenticationError < APIError; end
     class NotExistError       < APIError; end
   end
