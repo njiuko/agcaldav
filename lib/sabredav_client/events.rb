@@ -68,6 +68,8 @@ module SabredavClient
     end
 
     def delete(uri)
+      raise SabredavClient::Errors::SabredavClientError if uri.nil? || !uri.end_with?(".ics")  
+
       req = client.create_request(:delete, path: uri)
       res = req.run
 

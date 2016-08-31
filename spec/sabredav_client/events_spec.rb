@@ -17,14 +17,35 @@ describe SabredavClient::Events do
     it "one event" do
       uri = "event.ics"
       FakeWeb.register_uri(:delete, "http://user@localhost:5232/user/calendar/#{uri}",
-                           [{:body => "1 deleted.", :status => ["200", "OK"]},
-                            {:body => "not found",  :status => ["404", "Not Found"]}])
+                           [{:body => "1 deleted.", :status => ["200", "OK"]}])
       r = events.delete(uri)
 
       expect(r).to be(true)
-      expect {
-        events.delete(uri)
-      }.to raise_error(SabredavClient::Errors::NotFoundError)
+      end
+
+    context "error" do
+      it "raises error if etag not includes .ics" do
+        uri = nil
+
+        expect {
+          events.delete(uri)
+        }.to raise_error(SabredavClient::Errors::SabredavClientError)
+
+        uri = "x-vvvvvv-sssss-2122222-xssw"
+
+        expect {
+          events.delete(uri)
+        }.to raise_error(SabredavClient::Errors::SabredavClientError)
+      end
+
+      it "it raises error NotFoundError if resource was not found" do
+        uri = "event.ics"
+        FakeWeb.register_uri(:delete, "http://user@localhost:5232/user/calendar/#{uri}",
+                             [{:body => "not found",  :status => ["404", "Not Found"]}])
+        expect {
+          events.delete(uri)
+        }.to raise_error(SabredavClient::Errors::NotFoundError)
+      end
     end
   end
 
