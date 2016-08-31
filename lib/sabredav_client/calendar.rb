@@ -93,16 +93,16 @@ module SabredavClient
         sharee[:access] = access.gsub(/\A[<cs:]+|[\/>]+\Z/, "")
 
         # So far Sabredav accepts every invite by default
-        sharee[:status] = :accepted unless REXML::XPath.first(entry, "//cs:invite-accepted").nil?
+        sharee[:status] = !REXML::XPath.first(entry, "//cs:invite-accepted").nil? ? :accepted : nil
+
+        sharee[:common_name] = !REXML::XPath.first(entry, "//d:common-name").nil? ? REXML::XPath.first(entry, "//d:common-name").text : nil
+
         # URI depends on a custom plugin
-        begin
-          sharee[:common_name] = REXML::XPath.first(entry, "//d:common-name").text
-          sharee[:uri]        = REXML::XPath.first(entry, "//cs:uri").text
-          sharee[:principal]  = REXML::XPath.first(entry, "//cs:principal").text
-        rescue
-          #sharee[:uri] = "Property not supported by SabreDAV server"
-          #sharee[:uri] = "Property not supported by SabreDAV server"
-        end
+        sharee[:uri] = !REXML::XPath.first(entry, "//cs:uri").nil? ? REXML::XPath.first(entry, "//cs:uri").text : nil
+
+        # URI depends on a custom plugin
+        sharee[:principal] = !REXML::XPath.first(entry, "//cs:principal").nil? ? REXML::XPath.first(entry, "//cs:principal").text : nil
+
         sharees.push(sharee)
       end
 
