@@ -1,5 +1,5 @@
 #Ruby CalDAV library named "sabredav_client"
-**sabredav_client is a CalDAV library based on martinpovolny/ruby-caldav and 4fthawaiian/ruby-caldav and collectiveidea/caldav**"
+**sabredav_client is a CalDAV library based on martinpovolny/ruby-caldav and 4fthawaiian/ruby-caldav and collectiveidea/caldav and agilstatic/agcaldav**"
 
 **Please keep in mind, sabredav_client ist still under heavy development and still not finished...**
 
