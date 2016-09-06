@@ -13,9 +13,12 @@ module SabredavClient
 
       SabredavClient::Errors::errorhandling(res)
 
+      etag = res.header["etag"]
+      etag = %Q/#{etag.gsub(/\A['"]+|['"]+\Z/, "")}/ unless etag.nil?
+
       {
         ics: res.body,
-        etag: res.header.to_hash["etag"].first
+        etag: etag
       }
     end
 
