@@ -54,10 +54,15 @@ describe SabredavClient::Events do
     it "one event" do
       uid = "47732F70-1793-47B3-80FA-57E3C5ECA0E5"
       uri = "#{uid}.ics"
-      FakeWeb.register_uri(:get, "http://user@localhost:5232/user/calendar/#{uri}", :body => File.open("spec/fixtures/event.ics"))
+
+      etag = "\"6341a7e8f9a1f775dd07c55b17ff27b7\""
+
+      expected_result = {etag: etag, ics: File.open("spec/fixtures/event.ics").read}
+
+      FakeWeb.register_uri(:get, "http://user@localhost:5232/user/calendar/#{uri}", body: File.open("spec/fixtures/event.ics"), etag: etag )
        r = events.find(uri)
 
-       expect(r).to be_a(String)
+       expect(r).to eq(expected_result)
     end
 
     it "two events" do

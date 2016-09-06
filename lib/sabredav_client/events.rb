@@ -12,7 +12,11 @@ module SabredavClient
       res = req.run
 
       SabredavClient::Errors::errorhandling(res)
-      res.body
+
+      {
+        ics: res.body,
+        etag: res.header.to_hash["etag"].first
+      }
     end
 
     def find_multiple(starts: "", ends: "")
