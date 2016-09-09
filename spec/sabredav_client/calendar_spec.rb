@@ -46,7 +46,7 @@ describe SabredavClient::Calendar do
       body        = SabredavClient::XmlRequestBuilder::ProppatchCalendar.new(displayname, description).to_xml
       header      = {content_type: "application/xml"}
 
-      FakeWeb.register_uri(:proppatch, "http://user@localhost:5232/user/calendar/", status: ["207", "Multi-Staus"])
+      FakeWeb.register_uri(:proppatch, "http://user@localhost:5232/user/calendar/", status: ["207", "Multi-Status"])
 
       expect(calendar.client).to receive(:create_request).with(:proppatch, header: header, body: body).and_call_original
 

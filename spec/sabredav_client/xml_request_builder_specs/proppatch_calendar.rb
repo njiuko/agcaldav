@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe SabredavClient::XmlRequestBuilder::ProppatchCalendar do
 
-  let(:proppatch) { described_class.new(displayname = "name", description = "description") }
+  let(:proppatch) { described_class.new(displayname = "name", description = "description", privilege = 'write-read') }
 
   describe "#to_xml" do
     let(:expected_xml) { File.read('spec/fixtures/xml_request_builder/proppatch_calendar.xml') }
