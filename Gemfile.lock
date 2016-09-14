@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sabredav_client (0.1.7)
+    sabredav_client (0.2.0)
       builder (~> 3.2)
       net-http-digest_auth (~> 1.4)
 

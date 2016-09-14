@@ -1,37 +1,33 @@
 require 'spec_helper'
 
 RSpec.describe SabredavClient::Request do
-  let!(:client) { SabredavClient::Client.new(:uri => "http://localhost:5232/user/calendar", :user => "user" , :password => "") }
+  let!(:connection_config) { SabredavClient::ConnectionConfig.new(:uri => "http://localhost:5232/user/calendar", :user => "user" , :password => "") }
   path = ""
 
   describe "initialize" do
-    let!(:request) { SabredavClient::Request.new(:get, client, path) }
+    let!(:request) { SabredavClient::Request.new(connection_config, :get) }
 
     it "tests supported http methods" do
       methods = [:put, :get, :post, :mkcalendar, :propfind, :proppatch, :report, :delete, :mkcol]
       methods.each do |method|
-        res = SabredavClient::Request.new(method, client, path)
+        res = SabredavClient::Request.new(connection_config, method)
         expect(res).to be_a SabredavClient::Request
       end
     end
 
     it "raises error if method not supported" do
       method = :foobar
-      expect { res = SabredavClient::Request.new(method, client, path)
+      expect { SabredavClient::Request.new(connection_config, method)
       }.to raise_error SabredavClient::Errors::HTTPMethodNotSupportedError
     end
 
     it "testes existence of http object" do
       expect(request.http).to be_a Net::HTTP
     end
-
-    it "tests existence of path" do
-      expect(request.path).to be
-    end
   end
 
   describe "add" do
-    let!(:request) { SabredavClient::Request.new(:put, client, path: "random.ics") }
+    let!(:request) { SabredavClient::Request.new(connection_config, :put, path: "random.ics") }
 
     it "header attributes" do
       request.add_header(content_type:    "application/xml",

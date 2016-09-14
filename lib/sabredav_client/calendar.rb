@@ -1,21 +1,21 @@
 module SabredavClient
 
   class Calendar
-    attr_accessor :client
+    attr_accessor :connection_config
 
     def initialize(data)
-      @client = SabredavClient::Client.new(data)
+      @connection_config = SabredavClient::ConnectionConfig.new(data)
     end
 
     def events
-      @events ||= SabredavClient::Events.new(client)
+      @events ||= SabredavClient::Events.new(connection_config)
     end
 
     def info
       header  = {content_type: "application/xml"}
       body    = SabredavClient::XmlRequestBuilder::PROPFINDCalendar.new(properties: [:displayname, :sync_token, :getctag]).to_xml
 
-      req = client.create_request(:propfind, header: header, body: body)
+      req = SabredavClient::Request.new(connection_config, :propfind, header: header, body: body)
       res = req.run
 
       SabredavClient::Errors::errorhandling(res)
@@ -32,7 +32,7 @@ module SabredavClient
       body    = SabredavClient::XmlRequestBuilder::Mkcalendar.new(displayname, description).to_xml
       header  = {dav: "resource-must-be-null", content_type: "application/xml"}
 
-      req = client.create_request(:mkcalendar, header: header, body: body)
+      req = SabredavClient::Request.new(connection_config, :mkcalendar, header: header, body: body)
 
       res = req.run
 
@@ -44,7 +44,7 @@ module SabredavClient
       body = XmlRequestBuilder::ProppatchCalendar.new(displayname, description).to_xml
       header = {content_type: "application/xml"}
 
-      req = client.create_request(:proppatch, header: header, body: body)
+      req = SabredavClient::Request.new(connection_config, :proppatch, header: header, body: body)
 
       res = req.run
 
@@ -56,7 +56,8 @@ module SabredavClient
     end
 
     def delete
-      req = client.create_request(:delete)
+      req = SabredavClient::Request.new(connection_config, :delete)
+
       res = req.run
 
       if res.code.to_i.between?(200,299)
@@ -73,7 +74,7 @@ module SabredavClient
       body    = SabredavClient::XmlRequestBuilder::PostSharing.new(
         adds, summary, common_name, privilege, removes).to_xml
 
-      req = client.create_request(:post, header: header, body: body)
+      req = SabredavClient::Request.new(connection_config, :post, header: header, body: body)
 
       res = req.run
 
@@ -90,7 +91,7 @@ module SabredavClient
       body    = SabredavClient::XmlRequestBuilder::PropfindInvite.new.to_xml
       header  = {content_type: "application/xml", depth: "0"}
 
-      req     = client.create_request(:propfind, header: header, body: body)
+      req = SabredavClient::Request.new(connection_config, :propfind, header: header, body: body)
 
       res     = req.run
 
@@ -136,8 +137,7 @@ module SabredavClient
       body    = SabredavClient::XmlRequestBuilder::ReportEventChanges.new(sync_token).to_xml
       header  = {content_type: "application/xml"}
 
-      req     = client.create_request(:report, header: header, body: body)
-
+      req = SabredavClient::Request.new(connection_config, :report, header: header, body: body)
       res     = req.run
 
       SabredavClient::Errors::errorhandling(res)

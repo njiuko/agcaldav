@@ -11,7 +11,7 @@ describe SabredavClient::Calendar do
     end
 
     it "request configuration is available" do
-      expect(calendar.client).to be_a(SabredavClient::Client)
+      expect(calendar.connection_config).to be_a(SabredavClient::ConnectionConfig)
     end
 
   end
@@ -45,13 +45,14 @@ describe SabredavClient::Calendar do
       displayname = "example discription"
       body        = SabredavClient::XmlRequestBuilder::ProppatchCalendar.new(displayname, description).to_xml
       header      = {content_type: "application/xml"}
+      request = SabredavClient::Request.new(calendar.connection_config, :proppatch, header: header, body: body)
 
       FakeWeb.register_uri(:proppatch, "http://user@localhost:5232/user/calendar/", status: ["207", "Multi-Staus"])
 
-      expect(calendar.client).to receive(:create_request).with(:proppatch, header: header, body: body).and_call_original
+      expect(SabredavClient::Request).to receive(:new).with(calendar.connection_config, :proppatch, header: header, body: body).and_return(request)
 
       r = calendar.update(displayname: displayname, description: description)
-      expect(r).to be
+      expect(r).to be(true)
 
     end
 

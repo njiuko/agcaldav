@@ -5,6 +5,6 @@ require 'rexml/xpath'
 require 'time'
 require 'date'
 
-['errors/errors.rb','xml_request_builder.rb', 'client.rb', 'request.rb', 'net.rb', "calendar.rb", "events.rb", "principal.rb"].each do |f|
+['errors/errors.rb','xml_request_builder.rb', 'connection_config.rb', 'request.rb', 'net.rb', "calendar.rb", "events.rb", "principal.rb"].each do |f|
     require File.join( File.dirname(__FILE__), 'sabredav_client', f )
 end

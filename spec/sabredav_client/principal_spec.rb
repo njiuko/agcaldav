@@ -1,14 +1,13 @@
 require 'spec_helper'
 
-describe SabredavClient::Client do
+describe SabredavClient::Principal do
 
-    let(:principal) { SabredavClient::Principal.new(:uri => "http://localhost:5232/user/principals/user", :user => "user" , :password => "") }
-
+  let(:principal) { SabredavClient::Principal.new(:uri => "http://localhost:5232/user/principals/user", :user => "user" , :password => "") }
 
   describe "initialization" do
 
     it "client available" do
-      expect(principal.client).to be_a(SabredavClient::Client)
+      expect(principal.connection_config).to be_a(SabredavClient::ConnectionConfig)
     end
   end
 

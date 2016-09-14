@@ -1,14 +1,13 @@
 require 'spec_helper'
 
 describe SabredavClient::Events do
-  client = SabredavClient::Client.new(uri: "http://localhost:5232/user/calendar", user: "user", password: "")
-  let!(:events) { described_class.new(client = client) }
+  connection_config = SabredavClient::ConnectionConfig.new(uri: "http://localhost:5232/user/calendar", user: "user", password: "")
+  let!(:events) { described_class.new(connection_config = connection_config) }
 
   describe "initialization" do
 
-    it "client" do
-
-      expect(events.client).to be_a(SabredavClient::Client)
+    it "connection_config" do
+      expect(events.connection_config).to be_a(SabredavClient::ConnectionConfig)
     end
   end
 

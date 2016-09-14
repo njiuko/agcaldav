@@ -1,14 +1,14 @@
 module SabredavClient
 
   class Events
-    attr_accessor :client
+    attr_accessor :connection_config
 
-    def initialize(client)
-      @client = client
+    def initialize(connection_config)
+      @connection_config = connection_config
     end
 
     def find(uri)
-      req = client.create_request(:get, path: uri)
+      req = SabredavClient::Request.new(connection_config, :get, path: uri)
       res = req.run
 
       SabredavClient::Errors::errorhandling(res)
@@ -34,7 +34,7 @@ module SabredavClient
                                                       Time.parse(ends).utc.strftime("%Y%m%dT%H%M%S") ).to_xml
       end
 
-      req = client.create_request(:report, header: header)
+      req = SabredavClient::Request.new(connection_config, :report, header: header)
       res = req.run
 
       SabredavClient::Errors::errorhandling(res)
@@ -51,7 +51,8 @@ module SabredavClient
       # server uses a certain OwnerPlugin
       header = {content_type: "application/xml"}
       body = XmlRequestBuilder::PropfindOwner.new.to_xml
-      req = client.create_request(:propfind, path: uri, header: header, body: body)
+
+      req = SabredavClient::Request.new(connection_config, :propfind, path: uri, header: header, body: body)
       res = req.run
 
       SabredavClient::Errors::errorhandling(res)
@@ -64,7 +65,8 @@ module SabredavClient
       # server uses a certain OwnerPlugin
       header = {content_type: "application/xml"}
       body = XmlRequestBuilder::ProppatchEventsOwner.new(owner).to_xml
-      req = client.create_request(:proppatch, path: uri, header: header, body: body)
+
+      req = SabredavClient::Request.new(connection_config, :proppatch, path: uri, header: header, body: body)
       res = req.run
 
       if res.code.to_i.between?(200,299)
@@ -77,7 +79,7 @@ module SabredavClient
     def delete(uri)
       raise SabredavClient::Errors::SabredavClientError if uri.nil? || !uri.end_with?(".ics")
 
-      req = client.create_request(:delete, path: uri)
+      req = SabredavClient::Request.new(connection_config, :delete, path: uri)
       res = req.run
 
       if res.code.to_i.between?(200,299)
@@ -95,7 +97,7 @@ module SabredavClient
         header[:if_match] = %Q/"#{etag.gsub(/\A['"]+|['"]+\Z/, "")}"/
       end
 
-      req = client.create_request(:put,header: header, body: body, path: uri)
+      req = SabredavClient::Request.new(connection_config, :put, path: uri, header: header, body: body)
       res = req.run
 
       SabredavClient::Errors::errorhandling(res)

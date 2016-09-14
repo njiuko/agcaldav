@@ -1,13 +1,15 @@
 module SabredavClient
   class Request
-    attr_accessor :path
-    attr_reader :client, :request, :http
 
-    def initialize(method, client, path)
-      @client  = client
-      @path    = "#{client.base_path}/#{path}"
+    attr_reader :connection_config, :request, :http
+
+    def initialize(connection_config, method, header: {}, body: "", path: "")
+
+      @connection_config  = connection_config
       @http    = build_http
-      @request = build_request(method)
+      @request = build_request(method, "#{connection_config.base_path}/#{path}")
+      add_header(header)  unless header.empty?
+      add_body(body)      unless body.empty?
 
       add_auth
     end
@@ -30,21 +32,21 @@ module SabredavClient
     private
 
     def build_http
-      unless client.proxy_uri
-        http = Net::HTTP.new(client.host, client.port)
+      unless connection_config.proxy_uri
+        http = Net::HTTP.new(connection_config.host, connection_config.port)
       else
-        http = Net::HTTP.new(client.host, client.port, client.proxy_host, client.proxy_port)
+        http = Net::HTTP.new(connection_config.host, connection_config.port, connection_config.proxy_host, connection_config.proxy_port)
       end
 
-      if client.ssl
-        http.use_ssl = client.ssl
+      if connection_config.ssl
+        http.use_ssl = connection_config.ssl
         http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
 
       http
     end
 
-    def build_request(method)
+    def build_request(method, path)
       case method
       when :get
         Net::HTTP::Get.new(path)
@@ -70,26 +72,26 @@ module SabredavClient
     end
 
     def add_auth
-      unless client.authtype == 'digest'
-        request.basic_auth client.user, client.password
+      unless connection_config.authtype == 'digest'
+        request.basic_auth connection_config.user, connection_config.password
       else
         request.add_field 'Authorization', digestauth(method.to_s.upcase)
       end
     end
 
     def digestauth
-      h = Net::HTTP.new client.duri.host, client.duri.port
+      h = Net::HTTP.new connection_config.duri.host, connection_config.duri.port
 
-      if client.ssl
-        h.use_ssl = client.ssl
+      if connection_config.ssl
+        h.use_ssl = connection_config.ssl
         h.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
 
-      req = Net::HTTP::Get.new client.duri.request_uri
+      req = Net::HTTP::Get.new connection_config.duri.request_uri
       res = h.request req
       # res is a 401 response with a WWW-Authenticate header
 
-      auth = client.digest_auth.auth_header client.duri, res['www-authenticate'], method
+      auth = connection_config.digest_auth.auth_header connection_config.duri, res['www-authenticate'], method
 
       return auth
     end
