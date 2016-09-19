@@ -77,7 +77,7 @@ describe SabredavClient::Events do
   end
 
   describe "create_update" do
-    etag      = "123"
+    etag      = "\"123\""
     uri       = "event.ics"
     event_ics =  File.open('spec/fixtures/event.ics')
 
@@ -85,7 +85,7 @@ describe SabredavClient::Events do
       FakeWeb.register_uri(:put, "http://user@localhost:5232/user/calendar/#{uri}", {etag: etag, status: ["201", "OK"]})
       r = events.create_update(uri, event_ics.to_s)
 
-      expect(r).to eq etag
+      expect(r).to eq "123"
     end
 
     it "update event" do

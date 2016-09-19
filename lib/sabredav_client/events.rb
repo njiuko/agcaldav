@@ -99,7 +99,8 @@ module SabredavClient
       res = req.run
 
       SabredavClient::Errors::errorhandling(res)
-      res['etag']
+      etag = res['etag']
+      %Q/#{etag.gsub(/\A['"]+|['"]+\Z/, "")}/ unless etag.nil?
     end
   end
 end
