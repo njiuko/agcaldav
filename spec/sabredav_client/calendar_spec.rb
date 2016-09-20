@@ -128,7 +128,7 @@ describe SabredavClient::Calendar do
   describe "fetch changes" do
     new_sync_token  = "http://sabredav.org/ns/sync/5001"
     deletions       = [ "deletedevent.ics" ]
-    changes         = [ {uri: "newevent.ics", etag: "\"1\""}, {uri: "updatedevent.ics", etag: "\"2\""}]
+    changes         = [ {uri: "newevent.ics", etag: "1"}, {uri: "updatedevent.ics", etag: "2"}]
 
     it "got two changes and one deletion" do
       FakeWeb.register_uri(:report, "http://user@localhost:5232/user/calendar/", body: File.open('spec/fixtures/calendar_fetch_changes.xml') )

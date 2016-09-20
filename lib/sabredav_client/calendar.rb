@@ -146,17 +146,20 @@ module SabredavClient
       deletions = []
       xml = REXML::Document.new(res.body)
 
-      #FIXME This is so damn ugly, but at least it`s working now
       REXML::XPath.each(xml, "//d:response/", {"d"=> "DAV:"}) do |response|
         entry = REXML::Document.new.add(response)
         if (REXML::XPath.first(entry, "//d:status").text == "HTTP/1.1 404 Not Found")
             deletions.push(
               REXML::XPath.first(entry, "//d:href").text.to_s.split("/").last)
         else
+          uri  = REXML::XPath.first(entry, "//d:href").text.split("/").last
+          etag = REXML::XPath.first(entry, "//d:getetag").text
+          etag = %Q/#{etag.gsub(/\A['"]+|['"]+\Z/, "")}/ unless etag.nil?
+
           changes.push(
             {
-              uri:  REXML::XPath.first(entry, "//d:href").text.split("/").last,
-              etag: REXML::XPath.first(entry, "//d:getetag").text
+              uri: uri,
+              etag: etag
             })
         end
       end
